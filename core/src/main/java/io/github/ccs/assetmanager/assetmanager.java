@@ -29,7 +29,7 @@ public class assetmanager extends AssetManager {
 
     @Override
     public void dispose() {
-        // Always clean up!
+        
         manager.dispose();
     }
 }
