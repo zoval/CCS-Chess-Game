@@ -13,6 +13,7 @@ public final class Board {
     private final Position position = new Position();
     private final MoveValidator moveValidator = new MoveValidator();
     private final SpecialMoves specialMoves = moveValidator.getSpecialMoves();
+    private final FiftymoveRule fiftyMoveRule = new FiftymoveRule();
     private final GameStatus gameStatus = new GameStatus();
     private boolean whiteTurn = true;
 
@@ -39,6 +40,7 @@ public final class Board {
         }
 
         int piece = position.getPiece(fromRow, fromColumn);
+        int target = position.getPiece(toRow, toColumn);
         boolean castling = specialMoves.isCastlingMove(position, fromRow, fromColumn,
             toRow, toColumn, whiteTurn, moveValidator);
         boolean enPassant = specialMoves.isEnPassantMove(position, fromRow, fromColumn,
@@ -55,15 +57,19 @@ public final class Board {
             position.setPiece(toRow, rookFromColumn, Piece.EMPTY);
         }
         promotePawn(toRow, toColumn, piece);
+        boolean pawnMoved = Piece.typeOf(piece) == Piece.PAWN;
+        boolean captureMade = target != Piece.EMPTY || enPassant;
+        fiftyMoveRule.recordMove(pawnMoved, captureMade);
         specialMoves.recordMove(fromRow, fromColumn, toRow, toColumn, piece);
         whiteTurn = !whiteTurn;
-        gameStatus.update(position, moveValidator, whiteTurn);
+        gameStatus.update(position, moveValidator, whiteTurn, fiftyMoveRule.isDraw());
         return true;
     }
 
     public void reset() {
         position.reset();
         specialMoves.reset();
+        fiftyMoveRule.reset();
         whiteTurn = true;
         gameStatus.reset();
     }
