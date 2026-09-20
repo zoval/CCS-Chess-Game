@@ -53,8 +53,8 @@ public final class Board {
     }
 
     private void promotePawn(int row, int column, int piece) {
-        if (Piece.typeOf(piece) == Piece.PAWN && (row == 0 || row == 7)) {
-            position.setPiece(row, column, Piece.forColor(Piece.QUEEN, Piece.isWhite(piece)));
+        if (SpecialMoves.isPromotion(piece, row)) {
+            position.setPiece(row, column, SpecialMoves.promotedPiece(piece, Piece.QUEEN));
         }
     }
 }
