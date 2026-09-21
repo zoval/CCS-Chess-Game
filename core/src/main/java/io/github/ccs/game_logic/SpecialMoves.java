@@ -14,14 +14,19 @@ public final class SpecialMoves {
 	private int lastToColumn = -1;
 	private int lastPiece = Piece.EMPTY;
 
+	//promotion is handled in Board class, but needed to be here to check if a pawn is being promoted
 	public static boolean isPromotion(int piece, int row) {
 		return Piece.typeOf(piece) == Piece.PAWN && (row == 0 || row == 7);
 	}
 
+	//checks if promoted piece is valid, as isPromotion does states that any piece at the ends of the board
+	//is a promotion, but we need to check if the piece is valid for promotion
 	public static int promotedPiece(int pawn, int promotedType) {
 		if (Piece.typeOf(pawn) != Piece.PAWN) {
 			throw new IllegalArgumentException("Only pawns can be promoted");
 		}
+		//only allow promotion to queen, rook, bishop, or knight
+		//else pick a piece again
 		if (promotedType != Piece.QUEEN && promotedType != Piece.ROOK
 			&& promotedType != Piece.BISHOP && promotedType != Piece.KNIGHT) {
 			throw new IllegalArgumentException("A pawn must promote to a queen, rook, bishop, or knight");
@@ -29,12 +34,16 @@ public final class SpecialMoves {
 		return Piece.forColor(promotedType, Piece.isWhite(pawn));
 	}
 
+	//checks the conditions for castling
 	public boolean isCastlingMove(Position position, int fromRow, int fromColumn,
 		int toRow, int toColumn, boolean white, MoveValidator validator) {
 		if (position.getPiece(fromRow, fromColumn) != Piece.forColor(Piece.KING, white)
-			|| fromRow != (white ? 0 : 7) || fromColumn != 4 || toRow != fromRow
-			|| (toColumn != 2 && toColumn != 6) || position.getPiece(toRow, toColumn) != Piece.EMPTY
-			|| (white ? whiteKingMoved : blackKingMoved)) return false;
+			|| fromRow != (white ? 0 : 7) || fromColumn != 4 || toRow != fromRow       //so tldr: if the piece is not a king, or the king is not in its 
+			|| (toColumn != 2 && toColumn != 6) || position.getPiece(toRow, toColumn) != Piece.EMPTY //original position, or the king is not moving to the same row, return false
+			|| (white ? whiteKingMoved : blackKingMoved)){
+				//added braces for intuivity
+				return false;
+			} 
 
 		boolean kingSide = toColumn == 6;
 		int rookColumn = kingSide ? 7 : 0;
@@ -47,11 +56,11 @@ public final class SpecialMoves {
 		for (int column = fromColumn + step; column != rookColumn; column += step) {
 			if (position.getPiece(fromRow, column) != Piece.EMPTY) return false;
 		}
-		if (validator.isKingAttacked(position, white)) return false;
+		if (validator.isKingAttacked(position, white)) return false; //because if the king is in check, it cannot castle
 
 		position.setPiece(fromRow, fromColumn, Piece.EMPTY);
 		position.setPiece(fromRow, fromColumn + step, Piece.forColor(Piece.KING, white));
-		boolean safe = !validator.isKingAttacked(position, white);
+		boolean safe = !validator.isKingAttacked(position, white); //check if the king is attacked after moving one square towards the rook, if safe, then castle allowed
 		position.setPiece(fromRow, fromColumn + step, Piece.EMPTY);
 		position.setPiece(fromRow, fromColumn, Piece.forColor(Piece.KING, white));
 		return safe;
@@ -72,11 +81,13 @@ public final class SpecialMoves {
 			&& lastToColumn == toColumn;
 	}
 
+
 	public void recordMove(int fromRow, int fromColumn, int toRow, int toColumn, int piece) {
 		lastFromRow = fromRow;
 		lastFromColumn = fromColumn;
 		lastToRow = toRow;
 		lastToColumn = toColumn;
+		//toColums is not read at all, but program breaks if I remove it, so no touchy touch
 		lastPiece = piece;
 		boolean white = Piece.isWhite(piece);
 		if (Piece.typeOf(piece) == Piece.KING) {
@@ -90,6 +101,7 @@ public final class SpecialMoves {
 		}
 	}
 
+	//reset state for a new game
 	public void reset() {
 		whiteKingMoved = false;
 		blackKingMoved = false;
