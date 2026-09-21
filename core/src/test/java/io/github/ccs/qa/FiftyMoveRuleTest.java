@@ -1,9 +1,11 @@
 package io.github.ccs.qa;
 
+import org.junit.Test;
+
 import io.github.ccs.game_logic.FiftymoveRule;
 
 public class FiftyMoveRuleTest {
-    //@Test
+    @Test
     public void fiftyMoveRuleTriggersAfterFiftyConsecutiveQuietMoves() {
         FiftymoveRule rule = new FiftymoveRule();
 
@@ -16,7 +18,7 @@ public class FiftyMoveRuleTest {
         }
     }
 
-    //@Test
+    @Test
     public void pawnMoveResetsHalfmoveClock() {
         FiftymoveRule rule = new FiftymoveRule();
 
