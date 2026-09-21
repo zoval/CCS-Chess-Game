@@ -1,6 +1,7 @@
 package io.github.ccs.ui;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 
@@ -23,7 +24,14 @@ public class ChessGameScreen extends ScreenAdapter {
     @Override
     public void show() {
         renderer = new BoardRenderer();
-        Gdx.input.setInputProcessor(new BoardInputHandler(board, renderer, animation));
+        BoardInputHandler boardInputHandler = new BoardInputHandler(board, renderer, animation);
+
+        // Chain the processors so UI clicks register before board clicks
+        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(renderer.getStage()); // UI first
+        multiplexer.addProcessor(boardInputHandler);   // Board input second
+
+        Gdx.input.setInputProcessor(multiplexer);
     }
 
     @Override

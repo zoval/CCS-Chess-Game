@@ -1,5 +1,5 @@
 package io.github.ccs.ui;
-
+import io.github.ccs.backend.SaveData;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
@@ -50,11 +50,24 @@ public class FirstScreen implements Screen {
             }
         });
 
+        // Load Button
+        TextButton loadButton = new TextButton("Load Game", buttonStyle);
+        loadButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                
+                SaveData.SaveGame(); // Call the loadGame method to load the saved game state
+                System.out.println("Load Game button clicked!"); // Placeholder for load game functionality
+            }
+        });
+
         // Add elements to table
         table.top();
         table.add(title).padTop(40).center();
         table.row();
-        table.add(playButton).expand().center();
+        table.add(playButton).padTop(150).center();
+        table.row();
+        table.add(loadButton).padTop(10).center();
 
         stage.addActor(table);
     }

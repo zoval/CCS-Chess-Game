@@ -5,18 +5,26 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Stage; //added a few imports for my changes
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 import io.github.ccs.game_logic.Board;
 import io.github.ccs.game_logic.Piece;
 
-/** Handles drawing the chessboard, pieces, animations, and game status. */
+//Handles drawing the chessboard, pieces, animations, and game status.
 public class BoardRenderer implements Disposable {
     private final SpriteBatch batch = new SpriteBatch();
     private final BitmapFont font = new BitmapFont();
     private final Texture chessboard = new Texture(Gdx.files.internal("board.png"));
     private final Texture[][] pieceTextures = new Texture[2][6];
-
+    //just some variables for the stage, skin and save button
+    private final Stage stage;
+    private final Skin skin;
+    private final TextButton saveButton;
     private float boardX;
     private float boardY;
     private float boardSize;
@@ -30,6 +38,20 @@ public class BoardRenderer implements Disposable {
                     Gdx.files.internal(colors[color] + "-" + names[type] + ".png"));
             }
         }
+        
+        //Initialize Scene2D UI for the save button
+        stage = new Stage(new ScreenViewport());
+        skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
+        Gdx.input.setInputProcessor(stage);
+        saveButton = new TextButton("Save", skin);
+        stage.addActor(saveButton); 
+        //listens for clicks on the save button and prints "Save Game button clicked!" to the terminal
+        saveButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                System.out.println("Save Game button clicked!"); // Placeholder for save game functionality
+            }
+        });        
     }
 
     public void updateLayout() {
@@ -37,6 +59,9 @@ public class BoardRenderer implements Disposable {
         boardSize = Math.max(1, boardSize - 20);
         boardX = (Gdx.graphics.getWidth() - boardSize) / 2f;
         boardY = (Gdx.graphics.getHeight() - boardSize - 40) / 2f;
+        //Added this to position the save button at the top right corner of the screen
+        saveButton.setPosition(Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 50);
+        saveButton.setSize(80, 35);
     }
 
     public void render(Board board, PieceAnimation animation) {
@@ -48,6 +73,10 @@ public class BoardRenderer implements Disposable {
         font.setColor(Color.WHITE);
         font.draw(batch, board.getStatusText(), 20, Gdx.graphics.getHeight() - 20);
         batch.end();
+
+        //Renders UI on top of board
+        stage.act(Gdx.graphics.getDeltaTime());
+        stage.draw();
     }
 
     private void drawPieces(Board board, PieceAnimation animation) {
@@ -98,12 +127,18 @@ public class BoardRenderer implements Disposable {
     public float getSquareSize() {
         return boardSize / 8f;
     }
+    //Gets the Stage object for input processing and UI rendering
+    public Stage getStage() {
+        return stage;
+    }
 
     @Override
     public void dispose() {
         batch.dispose();
         font.dispose();
         chessboard.dispose();
+        stage.dispose(); //added this to dispose the stage
+        skin.dispose(); //added this to dispose the skin
         for (Texture[] colorGroup : pieceTextures) {
             for (Texture texture : colorGroup) {
                 if (texture != null) texture.dispose();
