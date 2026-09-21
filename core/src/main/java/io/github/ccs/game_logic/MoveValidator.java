@@ -2,6 +2,12 @@ package io.github.ccs.game_logic;
 
 /** Validates piece movement, paths, attacks, and king safety. */
 public final class MoveValidator {
+    private final SpecialMoves specialMoves = new SpecialMoves();
+
+    public SpecialMoves getSpecialMoves() {
+        return specialMoves;
+    }
+
     public boolean isLegalMove(Position position, int fromRow, int fromColumn,
         int toRow, int toColumn, boolean whiteTurn) {
         if (!position.contains(fromRow, fromColumn) || !position.contains(toRow, toColumn)) return false;
@@ -10,13 +16,39 @@ public final class MoveValidator {
         if (piece == Piece.EMPTY || Piece.isWhite(piece) != whiteTurn
             || Piece.typeOf(target) == Piece.KING
             || (target != Piece.EMPTY && Piece.isWhite(target) == Piece.isWhite(piece))) return false;
-        if (!isPseudoLegalMove(position, fromRow, fromColumn, toRow, toColumn)) return false;
+        boolean castling = specialMoves.isCastlingMove(position, fromRow, fromColumn,
+            toRow, toColumn, whiteTurn, this);
+        boolean enPassant = specialMoves.isEnPassantMove(position, fromRow, fromColumn,
+            toRow, toColumn, whiteTurn);
+        if (!castling && !enPassant && !isPseudoLegalMove(position, fromRow, fromColumn, toRow, toColumn)) {
+            return false;
+        }
 
         position.setPiece(toRow, toColumn, piece);
         position.setPiece(fromRow, fromColumn, Piece.EMPTY);
+        int enPassantRow = -1;
+        int enPassantPiece = Piece.EMPTY;
+        int rookFromColumn = -1;
+        int rookToColumn = -1;
+        if (enPassant) {
+            enPassantRow = toRow + (whiteTurn ? -1 : 1);
+            enPassantPiece = position.getPiece(enPassantRow, toColumn);
+            position.setPiece(enPassantRow, toColumn, Piece.EMPTY);
+        }
+        if (castling) {
+            rookFromColumn = toColumn == 6 ? 7 : 0;
+            rookToColumn = toColumn == 6 ? 5 : 3;
+            position.setPiece(toRow, rookToColumn, position.getPiece(toRow, rookFromColumn));
+            position.setPiece(toRow, rookFromColumn, Piece.EMPTY);
+        }
         boolean safe = !isKingAttacked(position, Piece.isWhite(piece));
         position.setPiece(fromRow, fromColumn, piece);
         position.setPiece(toRow, toColumn, target);
+        if (enPassant) position.setPiece(enPassantRow, toColumn, enPassantPiece);
+        if (castling) {
+            position.setPiece(toRow, rookFromColumn, position.getPiece(toRow, rookToColumn));
+            position.setPiece(toRow, rookToColumn, Piece.EMPTY);
+        }
         return safe;
     }
 
