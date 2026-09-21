@@ -12,21 +12,36 @@ public class AssetManagerHelper extends AssetManager {
         super();
     }
 
+    /**
+     * Queues and synchronously loads all board and standard piece texture assets.
+     */
     public void loadBoardAssets() {
         load("pieces/board.png", Texture.class);
         for (String color : COLORS) {
             for (String name : NAMES) {
-                load("pieces/" + color + "-" + name + ".png", Texture.class);
+                load("pieces/" + color + "_standard/" + color + "-" + name + ".png", Texture.class);
             }
         }
         finishLoading();
     }
 
+    /**
+     * Retrieves the loaded chessboard texture.
+     *
+     * @return chessboard {@link Texture}
+     */
     public Texture getBoardTexture() {
         return get("pieces/board.png", Texture.class);
     }
 
+    /**
+     * Retrieves a loaded piece texture for the given color and piece name.
+     *
+     * @param color piece color ("white" or "black")
+     * @param name  piece name ("pawn", "knight", "bishop", "rook", "queen", "king")
+     * @return piece {@link Texture}
+     */
     public Texture getPieceTexture(String color, String name) {
-        return get("pieces/" + color + "-" + name + ".png", Texture.class);
+        return get("pieces/" + color + "_standard/" + color + "-" + name + ".png", Texture.class);
     }
 }
