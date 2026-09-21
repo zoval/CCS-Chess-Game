@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Disposable;
 
+import io.github.ccs.assets.AssetManagerHelper;
 import io.github.ccs.game_logic.Board;
 import io.github.ccs.game_logic.Piece;
 
@@ -14,8 +15,9 @@ import io.github.ccs.game_logic.Piece;
 public class BoardRenderer implements Disposable {
     private final SpriteBatch batch = new SpriteBatch();
     private final BitmapFont font = new BitmapFont();
-    private final Texture chessboard = new Texture(Gdx.files.internal("board.png"));
+    private final AssetManagerHelper assetManager = new AssetManagerHelper();
     private final Texture[][] pieceTextures = new Texture[2][6];
+    private final Texture chessboard;
 
     private float boardX;
     private float boardY;
@@ -24,10 +26,13 @@ public class BoardRenderer implements Disposable {
     public BoardRenderer() {
         String[] colors = {"white", "black"};
         String[] names = {"pawn", "knight", "bishop", "rook", "queen", "king"};
+
+        assetManager.loadBoardAssets();
+        chessboard = assetManager.getBoardTexture();
+
         for (int color = 0; color < 2; color++) {
             for (int type = 0; type < 6; type++) {
-                pieceTextures[color][type] = new Texture(
-                    Gdx.files.internal(colors[color] + "-" + names[type] + ".png"));
+                pieceTextures[color][type] = assetManager.getPieceTexture(colors[color], names[type]);
             }
         }
     }
@@ -103,11 +108,6 @@ public class BoardRenderer implements Disposable {
     public void dispose() {
         batch.dispose();
         font.dispose();
-        chessboard.dispose();
-        for (Texture[] colorGroup : pieceTextures) {
-            for (Texture texture : colorGroup) {
-                if (texture != null) texture.dispose();
-            }
-        }
+        assetManager.dispose();
     }
 }
