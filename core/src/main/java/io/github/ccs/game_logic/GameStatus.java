@@ -4,6 +4,7 @@ package io.github.ccs.game_logic;
 public final class GameStatus {
     private String text = "White to move";
     private boolean gameOver;
+    private boolean fiftyMoveDraw;
 
     public String getText() {
         return text;
@@ -13,12 +14,24 @@ public final class GameStatus {
         return gameOver;
     }
 
+    public boolean isFiftyMoveDraw() {
+        return fiftyMoveDraw;
+    }
+
     public void reset() {
         text = "White to move";
         gameOver = false;
+        fiftyMoveDraw = false;
     }
 
-    public void update(Position position, MoveValidator validator, boolean whiteTurn) {
+    public void update(Position position, MoveValidator validator, boolean whiteTurn, boolean fiftyMoveDraw) {
+        this.fiftyMoveDraw = fiftyMoveDraw;
+        if (fiftyMoveDraw) {
+            gameOver = true;
+            text = "Draw - fifty-move rule";
+            return;
+        }
+
         boolean inCheck = validator.isKingAttacked(position, whiteTurn);
         if (!validator.hasLegalMove(position, whiteTurn)) {
             gameOver = true;

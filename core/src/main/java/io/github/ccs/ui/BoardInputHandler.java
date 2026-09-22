@@ -1,7 +1,9 @@
 package io.github.ccs.ui;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.math.Vector2;
 
 import io.github.ccs.game_logic.Board;
 import io.github.ccs.game_logic.Piece;
@@ -20,16 +22,49 @@ public class BoardInputHandler extends InputAdapter {
         this.animation = animation;
     }
 
+    /**
+     * Handles keyboard shortcuts including F11 for toggling fullscreen mode.
+     *
+     * @param keycode the keycode of the pressed key
+     * @return true if the event was handled
+     */
+    @Override
+    public boolean keyDown(int keycode) {
+        if (keycode == Input.Keys.F11) {
+            if (Gdx.graphics.isFullscreen()) {
+                Gdx.graphics.setWindowedMode(640, 480);
+            } else {
+                Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Translates screen coordinates to board squares using viewport unprojection
+     * and performs piece selection or movement.
+     *
+     * @param screenX screen x position of pointer
+     * @param screenY screen y position of pointer
+     * @param pointer pointer index
+     * @param button  mouse button clicked
+     * @return true if the input was processed
+     */
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         if (board.isGameOver() || animation.isAnimating() || renderer.getBoardSize() <= 1) {
             return true;
         }
 
-        float worldY = Gdx.graphics.getHeight() - screenY;
+        Vector2 worldCoords = renderer.unproject(screenX, screenY);
         float squareSize = renderer.getSquareSize();
-        int column = (int) ((screenX - renderer.getBoardX()) / squareSize);
-        int row = (int) ((worldY - renderer.getBoardY()) / squareSize);
+        if (squareSize <= 0) {
+            return true;
+        }
+
+        int column = (int) Math.floor((worldCoords.x - renderer.getBoardX()) / squareSize);
+        int row = (int) Math.floor((worldCoords.y - renderer.getBoardY()) / squareSize);
 
         if (row < 0 || row >= 8 || column < 0 || column >= 8) {
             return true;
