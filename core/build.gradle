@@ -16,6 +16,10 @@ dependencies {
   }
 }
 
+tasks.test {
+  useJUnit()
+}
+
 jar {
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
