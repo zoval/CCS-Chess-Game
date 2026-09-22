@@ -5,6 +5,7 @@ import com.badlogic.gdx.InputAdapter;
 
 import io.github.ccs.game_logic.Board;
 import io.github.ccs.game_logic.Piece;
+import io.github.ccs.backend.SaveData;
 
 /** Processes touch input for tile selection and piece movement on the chess board. */
 public class BoardInputHandler extends InputAdapter {

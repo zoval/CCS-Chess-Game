@@ -1,5 +1,4 @@
 package io.github.ccs.game_logic;
-
 /** Coordinates board state, move validation, turns, and game status. */
 public final class Board {
     public static final int EMPTY = Piece.EMPTY;
@@ -10,7 +9,7 @@ public final class Board {
     public static final int QUEEN = Piece.QUEEN;
     public static final int KING = Piece.KING;
 
-    private final Position position = new Position();
+    public final Position position = new Position();
     private final MoveValidator moveValidator = new MoveValidator();
     private final SpecialMoves specialMoves = moveValidator.getSpecialMoves();
     private final FiftymoveRule fiftyMoveRule = new FiftymoveRule();
@@ -25,6 +24,10 @@ public final class Board {
         return whiteTurn;
     }
 
+    public void setWhiteTurn(boolean white) {
+        this.whiteTurn = white;
+    }
+    
     public boolean isGameOver() {
         return gameStatus.isGameOver();
     }
@@ -47,6 +50,7 @@ public final class Board {
             toRow, toColumn, whiteTurn);
         position.setPiece(fromRow, fromColumn, Piece.EMPTY);
         position.setPiece(toRow, toColumn, piece);
+        
         if (enPassant) {
             position.setPiece(toRow + (whiteTurn ? -1 : 1), toColumn, Piece.EMPTY);
         }

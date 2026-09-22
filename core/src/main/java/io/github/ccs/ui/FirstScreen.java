@@ -1,5 +1,4 @@
 package io.github.ccs.ui;
-import io.github.ccs.backend.SaveData;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
@@ -11,6 +10,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.ccs.MainGame;
+import io.github.ccs.game_logic.Board;
+import io.github.ccs.backend.SaveData;
+import io.github.ccs.backend.SaveManager;
 
 /** First screen of the application. Displayed after the application is created. */
 public class FirstScreen implements Screen {
@@ -46,7 +48,8 @@ public class FirstScreen implements Screen {
         playButton.addListener(new ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-                game.setScreen(new ChessGameScreen(game)); // Transition to game screen
+                Board board = new Board(); // Create a new board
+                game.setScreen(new ChessGameScreen(game, board)); // Transition to game screen
             }
         });
 
@@ -55,8 +58,14 @@ public class FirstScreen implements Screen {
         loadButton.addListener(new ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-                
-                SaveData.SaveGame(); // Call the loadGame method to load the saved game state
+                SaveData saved = SaveManager.loadGame();
+                if (saved == null) {
+                    System.out.println("No saved game found.");
+                    return; // stay on this screen
+                }
+                Board board = new Board();
+                saved.applyTo(board); // Restore the saved state to the board
+                game.setScreen(new ChessGameScreen(game, board)); // Transition to game screen with loaded board
                 System.out.println("Load Game button clicked!"); // Placeholder for load game functionality
             }
         });

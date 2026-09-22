@@ -1,29 +1,39 @@
 package io.github.ccs.backend;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.utils.Json;
+
 import io.github.ccs.game_logic.Board;
-import io.github.ccs.game_logic.Position;
-import io.github.ccs.game_logic.Piece;
 
-//this is the method that 
 public class SaveData {
-    Board Board = new Board();
-    Position Position = new Position();
-    
+    public int[][] pieceLocation;
+    public boolean isWhiteTurn;
 
-    public static void SaveGame() {
-        //This should scan the board and save the pieces' current location
-        int[][] pieceLocation = new int[8][8];
-        {
-            pieceLocation[1][1] = Piece.ROOK;
-            System.out.print(pieceLocation[1][1]);
-            System.out.print("Hello");
-        }
+    public SaveData() {
     }
-    
 
-    /*
-    This retains the players turn. 
-    White's turn = True, Black's turn = false
-    */
-    public boolean isWhite = Board.isWhiteTurn();
+    public static SaveData capture(Board board) {
+        SaveData data = new SaveData();
+        data.pieceLocation = new int[8][8];
+        for (int row = 0; row < 8; row++) {
+            for (int column = 0; column < 8; column++) {
+                data.pieceLocation[row][column] = board.getPiece(row, column);
+                System.out.print(data.pieceLocation[row][column] + " ");
+            }
+            System.out.println();
+        }
+        data.isWhiteTurn = board.isWhiteTurn();
+        System.out.println(data.isWhiteTurn ? "White's turn" : "Black's turn");
+        return data;
+    }
 
+    //Applies this saved data onto the given board, restoring its state.
+    public void applyTo(Board board) {
+        for (int row = 0; row < 8; row++) {
+            for (int column = 0; column < 8; column++) {
+                board.position.setPiece(row, column, pieceLocation[row][column]);
+            }
+        }
+        board.setWhiteTurn(isWhiteTurn);
+    }
 }

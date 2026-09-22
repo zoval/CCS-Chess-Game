@@ -12,6 +12,8 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
+import io.github.ccs.backend.SaveData;
+import io.github.ccs.backend.SaveManager;
 import io.github.ccs.game_logic.Board;
 import io.github.ccs.game_logic.Piece;
 
@@ -28,8 +30,10 @@ public class BoardRenderer implements Disposable {
     private float boardX;
     private float boardY;
     private float boardSize;
-
-    public BoardRenderer() {
+    private Board board;
+    
+    public BoardRenderer(Board board) {
+        this.board = board;
         String[] colors = {"white", "black"};
         String[] names = {"pawn", "knight", "bishop", "rook", "queen", "king"};
         for (int color = 0; color < 2; color++) {
@@ -49,7 +53,8 @@ public class BoardRenderer implements Disposable {
         saveButton.addListener(new ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-                System.out.println("Save Game button clicked!"); // Placeholder for save game functionality
+                SaveManager.saveGame(board);
+                System.out.println("Save Game button clicked!");
             }
         });        
     }

@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 /** Stores and initializes the pieces on the 8x8 chess board. */
 public final class Position {
-    private final int[][] pieces = new int[8][8];
+    public final int[][] pieces = new int[8][8];
 
     public Position() {
         reset();

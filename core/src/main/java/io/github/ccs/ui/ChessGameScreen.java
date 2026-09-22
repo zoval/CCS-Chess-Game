@@ -10,20 +10,17 @@ import io.github.ccs.game_logic.Board;
 
 /** Screen managing the chess game session and coordinating renderer and input components. */
 public class ChessGameScreen extends ScreenAdapter {
-    private final Board board = new Board();
+    private final Board board;
     private final PieceAnimation animation = new PieceAnimation();
     private BoardRenderer renderer;
 
-    public ChessGameScreen() {
-    }
-
-    public ChessGameScreen(MainGame game) {
-        this();
+    public ChessGameScreen(MainGame game, Board board) {
+        this.board = board;
     }
 
     @Override
     public void show() {
-        renderer = new BoardRenderer();
+        renderer = new BoardRenderer(board);
         BoardInputHandler boardInputHandler = new BoardInputHandler(board, renderer, animation);
 
         // Chain the processors so UI clicks register before board clicks
