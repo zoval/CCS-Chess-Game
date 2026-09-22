@@ -2,7 +2,7 @@ package io.github.ccs.game_logic;
 
 /** Coordinates board state, move validation, turns, and game status. */
 public final class Board {
-    //initializes the piece constants from the Piece class for easy access
+    /** Piece type definitions mapped from {@link Piece}. */
     public static final int EMPTY = Piece.EMPTY;
     public static final int PAWN = Piece.PAWN;
     public static final int KNIGHT = Piece.KNIGHT;
@@ -11,7 +11,7 @@ public final class Board {
     public static final int QUEEN = Piece.QUEEN;
     public static final int KING = Piece.KING;
 
-    //gets the position, validator and status classes
+    /** Internal game state logic managers. */
     private final Position position = new Position();
     private final MoveValidator moveValidator = new MoveValidator();
     private final SpecialMoves specialMoves = moveValidator.getSpecialMoves();
@@ -19,22 +19,22 @@ public final class Board {
     private final GameStatus gameStatus = new GameStatus();
     private boolean whiteTurn = true;
 
-    //getters from position to board class
+    /** @return piece ID at the specified coordinates. */
     public int getPiece(int row, int column) {
         return position.getPiece(row, column);
     }
 
-    //getters from gameStatus to board class
+    /** @return true if it is currently White's turn, false for Black. */
     public boolean isWhiteTurn() {
         return whiteTurn;
     }
 
-    //still a getter from gameStatus to board class
+    /** @return true if checkmate or stalemate has been reached. */
     public boolean isGameOver() {
         return gameStatus.isGameOver();
     }
 
-    //same as above
+    /** @return A human-readable string indicating the game's current status (e.g., Turn info, Check, Mate). */
     public String getStatusText() {
         return gameStatus.getText();
     }

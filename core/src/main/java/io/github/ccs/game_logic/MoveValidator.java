@@ -8,24 +8,41 @@ public final class MoveValidator {
         return specialMoves;
     }
 
+    /** 
+     * Determines if a move is legal according to chess rules, including turn constraints,
+     * piece movement patterns, and king safety (check).
+     * 
+     * @return true if the move is legal, false otherwise.
+     */
     public boolean isLegalMove(Position position, int fromRow, int fromColumn,
         int toRow, int toColumn, boolean whiteTurn) {
+        
+        // 1. Basic bounds and piece ownership check
         if (!position.contains(fromRow, fromColumn) || !position.contains(toRow, toColumn)) return false;
+        
         int piece = position.getPiece(fromRow, fromColumn);
         int target = position.getPiece(toRow, toColumn);
+        
+        // Must be a piece, whose turn it is, and cannot capture a king or own piece
         if (piece == Piece.EMPTY || Piece.isWhite(piece) != whiteTurn
             || Piece.typeOf(target) == Piece.KING
             || (target != Piece.EMPTY && Piece.isWhite(target) == Piece.isWhite(piece))) return false;
+        
+        // 2. Check move validity (special or standard)
         boolean castling = specialMoves.isCastlingMove(position, fromRow, fromColumn,
             toRow, toColumn, whiteTurn, this);
         boolean enPassant = specialMoves.isEnPassantMove(position, fromRow, fromColumn,
-            toRow, toColumn, whiteTurn);
+            toRow, toColumn, whiteTurn);                
+            
         if (!castling && !enPassant && !isPseudoLegalMove(position, fromRow, fromColumn, toRow, toColumn)) {
             return false;
         }
 
+        // 3. Simulate to check for self-check (King safety)
         position.setPiece(toRow, toColumn, piece);
         position.setPiece(fromRow, fromColumn, Piece.EMPTY);
+        
+        // ... (rest of the logic handles temporary captures for the check check)
         int enPassantRow = -1;
         int enPassantPiece = Piece.EMPTY;
         int rookFromColumn = -1;
