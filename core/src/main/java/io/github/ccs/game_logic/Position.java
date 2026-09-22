@@ -4,6 +4,8 @@ import java.util.Arrays;
 
 /** Stores and initializes the pieces on the 8x8 chess board. */
 public final class Position {
+    //position is represented as a 2D array of integers, where each integer represents a piece
+    //someday the position will be translated into notations for reviewing and saving games
     private final int[][] pieces = new int[8][8];
 
     public Position() {
