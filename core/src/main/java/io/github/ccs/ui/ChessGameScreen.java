@@ -26,41 +26,13 @@ public class ChessGameScreen extends ScreenAdapter {
         Gdx.input.setInputProcessor(new BoardInputHandler(board, renderer, animation));
     }
 
-    /**
-     * Renders active animations, board state, and UI.
-     * Skips drawing when window dimensions are non-positive (e.g. minimized).
-     *
-     * @param delta time elapsed in seconds since last frame
-     */
     @Override
     public void render(float delta) {
-        if (Gdx.graphics.getWidth() <= 0 || Gdx.graphics.getHeight() <= 0) {
-            return;
-        }
-
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         animation.update(delta);
-        if (renderer != null) {
-            renderer.render(board, animation);
-        }
-    }
-
-    /**
-     * Propagates resize events to the board renderer, guarding against minimized state.
-     *
-     * @param width  new screen width in pixels
-     * @param height new screen height in pixels
-     */
-    @Override
-    public void resize(int width, int height) {
-        if (width <= 0 || height <= 0) {
-            return;
-        }
-        if (renderer != null) {
-            renderer.resize(width, height);
-        }
+        renderer.render(board, animation);
     }
 
     @Override

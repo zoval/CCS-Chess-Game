@@ -1,12 +1,9 @@
 package io.github.ccs.ui;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -29,21 +26,6 @@ public class FirstScreen implements Screen {
     public void show() {
         stage = new Stage(new ScreenViewport());
         font = new BitmapFont(); // Default LibGDX font
-
-        stage.addListener(new InputListener() {
-            @Override
-            public boolean keyDown(InputEvent event, int keycode) {
-                if (keycode == Input.Keys.F11) {
-                    if (Gdx.graphics.isFullscreen()) {
-                        Gdx.graphics.setWindowedMode(640, 480);
-                    } else {
-                        Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
-                    }
-                    return true;
-                }
-                return false;
-            }
-        });
 
         Gdx.input.setInputProcessor(stage);
 
@@ -77,17 +59,8 @@ public class FirstScreen implements Screen {
         stage.addActor(table);
     }
 
-    /**
-     * Renders UI actors, skipping drawing when window dimensions are non-positive (e.g. minimized).
-     *
-     * @param delta time elapsed in seconds since last frame
-     */
     @Override
     public void render(float delta) {
-        if (Gdx.graphics.getWidth() <= 0 || Gdx.graphics.getHeight() <= 0) {
-            return;
-        }
-
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -95,20 +68,9 @@ public class FirstScreen implements Screen {
         stage.draw();
     }
 
-    /**
-     * Updates stage viewport dimensions, guarding against zero-dimension minimized states.
-     *
-     * @param width  new screen width in pixels
-     * @param height new screen height in pixels
-     */
     @Override
     public void resize(int width, int height) {
-        if (width <= 0 || height <= 0) {
-            return;
-        }
-        if (stage != null) {
-            stage.getViewport().update(width, height, true);
-        }
+        stage.getViewport().update(width, height, true);
     }
 
     @Override
