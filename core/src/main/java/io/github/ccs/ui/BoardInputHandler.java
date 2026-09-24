@@ -3,7 +3,6 @@ package io.github.ccs.ui;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.math.Vector2;
 
 import io.github.ccs.game_logic.Board;
 import io.github.ccs.game_logic.Piece;
@@ -11,15 +10,15 @@ import io.github.ccs.game_logic.Piece;
 /** Processes touch input for tile selection and piece movement on the chess board. */
 public class BoardInputHandler extends InputAdapter {
     private final Board board;
-    private final BoardRenderer renderer;
+    private final ChessGameScreen gameScreen;
     private final PieceAnimation animation;
     private int selectedRow = -1;
     private int selectedColumn = -1;
 
-    public BoardInputHandler(Board board, BoardRenderer renderer, PieceAnimation animation) {
+    public BoardInputHandler(Board board, PieceAnimation animation, ChessGameScreen gameScreen) {
         this.board = board;
-        this.renderer = renderer;
         this.animation = animation;
+        this.gameScreen = gameScreen;
     }
 
     /**
@@ -32,7 +31,7 @@ public class BoardInputHandler extends InputAdapter {
     public boolean keyDown(int keycode) {
         if (keycode == Input.Keys.F11) {
             if (Gdx.graphics.isFullscreen()) {
-                Gdx.graphics.setWindowedMode(640, 480);
+                Gdx.graphics.setWindowedMode(1024, 572);
             } else {
                 Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
             }
@@ -42,29 +41,23 @@ public class BoardInputHandler extends InputAdapter {
     }
 
     /**
-     * Translates screen coordinates to board squares using viewport unprojection
-     * and performs piece selection or movement.
-     *
-     * @param screenX screen x position of pointer
-     * @param screenY screen y position of pointer
-     * @param pointer pointer index
-     * @param button  mouse button clicked
-     * @return true if the input was processed
+     * Translates screen coordinates to board squares and performs piece selection or movement.
      */
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (board.isGameOver() || animation.isAnimating() || renderer.getBoardSize() <= 1) {
+        float boardSize = gameScreen.getBoardSize();
+        if (board.isGameOver() || animation.isAnimating() || boardSize <= 1) {
             return true;
         }
 
-        Vector2 worldCoords = renderer.unproject(screenX, screenY);
-        float squareSize = renderer.getSquareSize();
-        if (squareSize <= 0) {
-            return true;
-        }
+        // Use direct screen coordinates because rendering is no longer using a viewport transformation
+        float squareSize = boardSize / 8f;
+        float boardX = gameScreen.getBoardX();
+        float boardY = gameScreen.getBoardY();
 
-        int column = (int) Math.floor((worldCoords.x - renderer.getBoardX()) / squareSize);
-        int row = (int) Math.floor((worldCoords.y - renderer.getBoardY()) / squareSize);
+        // Invert Y because screen coordinates are 0,0 at top-left, but Chessboard is 0,0 at bottom-left
+        int column = (int) Math.floor((screenX - boardX) / squareSize);
+        int row = (int) Math.floor((Gdx.graphics.getHeight() - screenY - boardY) / squareSize);
 
         if (row < 0 || row >= 8 || column < 0 || column >= 8) {
             return true;

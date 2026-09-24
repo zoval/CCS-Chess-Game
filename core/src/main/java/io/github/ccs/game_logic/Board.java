@@ -41,6 +41,7 @@ public final class Board {
 
     /** Attempts a move for the current player and advances the turn on success. */
     public boolean move(int fromRow, int fromColumn, int toRow, int toColumn) {
+        if (gameStatus.isGameOver()) return false;
         if (!moveValidator.isLegalMove(position, fromRow, fromColumn, toRow, toColumn, whiteTurn)) {
             return false;
         }

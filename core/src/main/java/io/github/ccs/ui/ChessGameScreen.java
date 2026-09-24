@@ -11,27 +11,29 @@ import io.github.ccs.game_logic.Board;
 public class ChessGameScreen extends ScreenAdapter {
     private final Board board = new Board();
     private final PieceAnimation animation = new PieceAnimation();
+    private final MainGame game;
     private BoardRenderer renderer;
-
-    public ChessGameScreen() {
-    }
+    private float boardX, boardY, boardSize;
 
     public ChessGameScreen(MainGame game) {
-        this();
+        this.game = game;
     }
 
     @Override
     public void show() {
-        renderer = new BoardRenderer();
-        Gdx.input.setInputProcessor(new BoardInputHandler(board, renderer, animation));
+        renderer = new BoardRenderer(game.getSelectedTheme());
+        calculateLayout();
+        Gdx.input.setInputProcessor(new BoardInputHandler(board, animation, this));
     }
 
-    /**
-     * Renders active animations, board state, and UI.
-     * Skips drawing when window dimensions are non-positive (e.g. minimized).
-     *
-     * @param delta time elapsed in seconds since last frame
-     */
+    private void calculateLayout() {
+        float width = Gdx.graphics.getWidth();
+        float height = Gdx.graphics.getHeight();
+        boardSize = Math.min(width, height - 100);
+        boardX = (width - boardSize) / 2f;
+        boardY = (height - boardSize) / 2f;
+    }
+
     @Override
     public void render(float delta) {
         if (Gdx.graphics.getWidth() <= 0 || Gdx.graphics.getHeight() <= 0) {
@@ -43,30 +45,25 @@ public class ChessGameScreen extends ScreenAdapter {
 
         animation.update(delta);
         if (renderer != null) {
-            renderer.render(board, animation);
+            renderer.render(board, animation, boardX, boardY, boardSize);
         }
     }
 
-    /**
-     * Propagates resize events to the board renderer, guarding against minimized state.
-     *
-     * @param width  new screen width in pixels
-     * @param height new screen height in pixels
-     */
     @Override
     public void resize(int width, int height) {
-        if (width <= 0 || height <= 0) {
-            return;
-        }
-        if (renderer != null) {
-            renderer.resize(width, height);
-        }
+        calculateLayout();
     }
+
+    public float getBoardX() { return boardX; }
+    public float getBoardY() { return boardY; }
+    public float getBoardSize() { return boardSize; }
 
     @Override
     public void hide() {
         Gdx.input.setInputProcessor(null);
     }
+// ...existing code...
+
 
     @Override
     public void dispose() {
