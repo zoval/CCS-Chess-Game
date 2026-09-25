@@ -1,7 +1,9 @@
 package io.github.ccs.game_logic;
 
-/** Tracks the 50-move draw rule: 50 consecutive full moves without a pawn move or capture. */
+/** Tracks the 50-move draw rule: 50 consecutive full moves (100 halfmoves) without a pawn move or capture. */
 public class FiftymoveRule {
+    private static final int HALFMOVE_LIMIT = 100;
+
     private int halfmoveClock;
 
     public void recordMove(boolean pawnMoved, boolean captureMade) {
@@ -13,7 +15,7 @@ public class FiftymoveRule {
     }
 
     public boolean isDraw() {
-        return halfmoveClock >= 50;
+        return halfmoveClock >= HALFMOVE_LIMIT;
     }
 
     public int getHalfmoveClock() {
