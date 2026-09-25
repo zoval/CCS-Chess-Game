@@ -1,35 +1,71 @@
 package io.github.ccs.ui;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 
+import io.github.ccs.MainGame;
 import io.github.ccs.game_logic.Board;
 import io.github.ccs.game_logic.Piece;
 
 /** Processes touch input for tile selection and piece movement on the chess board. */
 public class BoardInputHandler extends InputAdapter {
     private final Board board;
-    private final BoardRenderer renderer;
+    private final ChessGameScreen gameScreen;
     private final PieceAnimation animation;
     private int selectedRow = -1;
     private int selectedColumn = -1;
 
-    public BoardInputHandler(Board board, BoardRenderer renderer, PieceAnimation animation) {
+    public BoardInputHandler(Board board, PieceAnimation animation, ChessGameScreen gameScreen) {
         this.board = board;
-        this.renderer = renderer;
         this.animation = animation;
+        this.gameScreen = gameScreen;
     }
 
+    /**
+     * Handles keyboard shortcuts including F11 for toggling fullscreen mode.
+     *
+     * @param keycode the keycode of the pressed key
+     * @return true if the event was handled
+     */
+    @Override
+    public boolean keyDown(int keycode) {
+        if (keycode == Input.Keys.F11) {
+            if (Gdx.graphics.isFullscreen()) {
+                Gdx.graphics.setWindowedMode(MainGame.GAME_WINDOW_WIDTH, MainGame.GAME_WINDOW_HEIGHT);
+            } else {
+                Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+            }
+            return true;
+        }
+        if (keycode == Input.Keys.ESCAPE) {
+            gameScreen.backToMenu();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Translates screen coordinates to board squares and performs piece selection or movement.
+     */
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        if (board.isGameOver() || animation.isAnimating() || renderer.getBoardSize() <= 1) {
+        float boardSize = gameScreen.getBoardSize();
+        if (board.isGameOver() || animation.isAnimating() || boardSize <= 1) {
             return true;
         }
 
-        float worldY = Gdx.graphics.getHeight() - screenY;
-        float squareSize = renderer.getSquareSize();
-        int column = (int) ((screenX - renderer.getBoardX()) / squareSize);
-        int row = (int) ((worldY - renderer.getBoardY()) / squareSize);
+        // Use direct screen coordinates because rendering is no longer using a viewport transformation
+        float size = gameScreen.getBoardSize();
+        float boardX = gameScreen.getBoardX();
+        float boardY = gameScreen.getBoardY();
+
+        // Invert Y because screen coordinates are 0,0 at top-left, but Chessboard is 0,0 at bottom-left.
+        // Map into the playable grid, which is inset within the board artwork by a decorative frame.
+        float gridX = (screenX - boardX) / size;
+        float gridY = (Gdx.graphics.getHeight() - screenY - boardY) / size;
+        int column = (int) Math.floor((gridX - gameScreen.getGridX()) / gameScreen.getSquareW());
+        int row = (int) Math.floor((gridY - gameScreen.getGridY()) / gameScreen.getSquareH());
 
         if (row < 0 || row >= 8 || column < 0 || column >= 8) {
             return true;

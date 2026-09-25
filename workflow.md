@@ -62,7 +62,7 @@ Hidden nuances:
 - Avoid hardcoding important gameplay decisions in a screen class.
 - LibGDX `Screen` classes have lifecycle methods like `show`, `render`, `resize`, and `dispose`; use `dispose` for cleanup when assets or resources are owned by that screen.
 
-### Game Logic Team
+### Game Logic Team   
 
 Folder: `core/src/main/java/io/github/ccs/game_logic`
 

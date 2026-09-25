@@ -9,9 +9,15 @@ dependencies {
   api "com.github.tommyettinger:anim8-gdx:$anim8Version"
   api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 
+  testImplementation 'junit:junit:4.13.2'
+
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
   }
+}
+
+tasks.test {
+  useJUnit()
 }
 
 jar {
