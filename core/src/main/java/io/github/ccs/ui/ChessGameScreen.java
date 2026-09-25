@@ -58,6 +58,17 @@ public class ChessGameScreen extends ScreenAdapter {
     public float getBoardY() { return boardY; }
     public float getBoardSize() { return boardSize; }
 
+    public float getGridX() { return renderer.getGridX(); }
+    public float getGridY() { return renderer.getGridY(); }
+    public float getSquareW() { return renderer.getSquareW(); }
+    public float getSquareH() { return renderer.getSquareH(); }
+
+    /** Restores the menu window size and returns to the main menu. */
+    public void backToMenu() {
+        Gdx.graphics.setWindowedMode(MainGame.MENU_WINDOW_WIDTH, MainGame.MENU_WINDOW_HEIGHT);
+        game.setScreen(new FirstScreen(game));
+    }
+
     @Override
     public void hide() {
         Gdx.input.setInputProcessor(null);

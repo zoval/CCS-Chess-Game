@@ -31,10 +31,14 @@ public class BoardInputHandler extends InputAdapter {
     public boolean keyDown(int keycode) {
         if (keycode == Input.Keys.F11) {
             if (Gdx.graphics.isFullscreen()) {
-                Gdx.graphics.setWindowedMode(1024, 572);
+                Gdx.graphics.setWindowedMode(MainGame.GAME_WINDOW_WIDTH, MainGame.GAME_WINDOW_HEIGHT);
             } else {
                 Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
             }
+            return true;
+        }
+        if (keycode == Input.Keys.ESCAPE) {
+            gameScreen.backToMenu();
             return true;
         }
         return false;

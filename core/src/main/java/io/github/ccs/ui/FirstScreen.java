@@ -107,7 +107,10 @@ public class FirstScreen extends ScreenAdapter {
         panel.pad(PANEL_FRAME_PAD);
         panel.center();
 
-        panel.add(createButton(playRegion, () -> game.setScreen(new ChessGameScreen(game)))).spaceBottom(BUTTON_GAP).row();
+        panel.add(createButton(playRegion, () -> {
+            Gdx.graphics.setWindowedMode(MainGame.GAME_WINDOW_WIDTH, MainGame.GAME_WINDOW_HEIGHT);
+            game.setScreen(new ChessGameScreen(game));
+        })).spaceBottom(BUTTON_GAP).row();
         panel.add(createButton(settingsRegion, null)).spaceBottom(BUTTON_GAP).row();
         panel.add(createButton(collectionRegion, () -> game.setScreen(new CollectionScreen(game)))).spaceBottom(BUTTON_GAP).row();
         panel.add(createButton(quitRegion, Gdx.app::exit)).row();
