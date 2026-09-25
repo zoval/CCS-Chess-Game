@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 
+import io.github.ccs.MainGame;
 import io.github.ccs.game_logic.Board;
 import io.github.ccs.game_logic.Piece;
 
@@ -55,13 +56,16 @@ public class BoardInputHandler extends InputAdapter {
         }
 
         // Use direct screen coordinates because rendering is no longer using a viewport transformation
-        float squareSize = boardSize / 8f;
+        float size = gameScreen.getBoardSize();
         float boardX = gameScreen.getBoardX();
         float boardY = gameScreen.getBoardY();
 
-        // Invert Y because screen coordinates are 0,0 at top-left, but Chessboard is 0,0 at bottom-left
-        int column = (int) Math.floor((screenX - boardX) / squareSize);
-        int row = (int) Math.floor((Gdx.graphics.getHeight() - screenY - boardY) / squareSize);
+        // Invert Y because screen coordinates are 0,0 at top-left, but Chessboard is 0,0 at bottom-left.
+        // Map into the playable grid, which is inset within the board artwork by a decorative frame.
+        float gridX = (screenX - boardX) / size;
+        float gridY = (Gdx.graphics.getHeight() - screenY - boardY) / size;
+        int column = (int) Math.floor((gridX - gameScreen.getGridX()) / gameScreen.getSquareW());
+        int row = (int) Math.floor((gridY - gameScreen.getGridY()) / gameScreen.getSquareH());
 
         if (row < 0 || row >= 8 || column < 0 || column >= 8) {
             return true;
