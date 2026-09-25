@@ -150,7 +150,7 @@ public class FirstScreen extends ScreenAdapter {
 
     private void toggleFullscreen() {
         if (Gdx.graphics.isFullscreen()) {
-            Gdx.graphics.setWindowedMode(1024, 572);
+            Gdx.graphics.setWindowedMode(MainGame.MENU_WINDOW_WIDTH, MainGame.MENU_WINDOW_HEIGHT);
         } else {
             Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
         }
