@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.ccs.MainGame;
+import io.github.ccs.sound.SoundManager;
 
 /** Screen to select the chess board/piece theme. */
 public class CollectionScreen extends ScreenAdapter {
@@ -44,7 +45,12 @@ public class CollectionScreen extends ScreenAdapter {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
                 if (keycode == Input.Keys.ESCAPE) {
+                    SoundManager.getInstance().playUIClick();
                     game.setScreen(new FirstScreen(game));
+                    return true;
+                }
+                if (keycode == Input.Keys.M) {
+                    SoundManager.getInstance().toggleSound();
                     return true;
                 }
                 return false;
@@ -57,6 +63,7 @@ public class CollectionScreen extends ScreenAdapter {
         button.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                SoundManager.getInstance().playUIClick();
                 game.setSelectedTheme(theme);
                 game.setScreen(new FirstScreen(game));
             }
@@ -69,6 +76,7 @@ public class CollectionScreen extends ScreenAdapter {
         back.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                SoundManager.getInstance().playUIClick();
                 game.setScreen(new FirstScreen(game));
             }
         });

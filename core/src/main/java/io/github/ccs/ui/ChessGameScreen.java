@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.GL20;
 
 import io.github.ccs.MainGame;
 import io.github.ccs.game_logic.Board;
+import io.github.ccs.sound.SoundManager;
 
 /** Screen managing the chess game session and coordinating renderer and input components. */
 public class ChessGameScreen extends ScreenAdapter {
@@ -23,6 +24,8 @@ public class ChessGameScreen extends ScreenAdapter {
     public void show() {
         renderer = new BoardRenderer(game.getSelectedTheme());
         calculateLayout();
+        SoundManager.getInstance().initialize();
+        SoundManager.getInstance().playBackgroundMusic();
         Gdx.input.setInputProcessor(new BoardInputHandler(board, animation, this));
     }
 
@@ -65,6 +68,8 @@ public class ChessGameScreen extends ScreenAdapter {
 
     /** Restores the menu window size and returns to the main menu. */
     public void backToMenu() {
+        SoundManager.getInstance().playUIClick();
+        SoundManager.getInstance().stopBackgroundMusic();
         Gdx.graphics.setWindowedMode(MainGame.MENU_WINDOW_WIDTH, MainGame.MENU_WINDOW_HEIGHT);
         game.setScreen(new FirstScreen(game));
     }
@@ -72,12 +77,12 @@ public class ChessGameScreen extends ScreenAdapter {
     @Override
     public void hide() {
         Gdx.input.setInputProcessor(null);
+        SoundManager.getInstance().stopBackgroundMusic();
     }
-// ...existing code...
-
 
     @Override
     public void dispose() {
+        SoundManager.getInstance().stopBackgroundMusic();
         if (renderer != null) {
             renderer.dispose();
         }
