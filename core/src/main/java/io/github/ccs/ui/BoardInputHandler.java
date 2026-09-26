@@ -7,6 +7,7 @@ import com.badlogic.gdx.InputAdapter;
 import io.github.ccs.MainGame;
 import io.github.ccs.game_logic.Board;
 import io.github.ccs.game_logic.Piece;
+import io.github.ccs.sound.SoundManager;
 
 /** Processes touch input for tile selection and piece movement on the chess board. */
 public class BoardInputHandler extends InputAdapter {
@@ -15,11 +16,14 @@ public class BoardInputHandler extends InputAdapter {
     private final PieceAnimation animation;
     private int selectedRow = -1;
     private int selectedColumn = -1;
+    
 
     public BoardInputHandler(Board board, PieceAnimation animation, ChessGameScreen gameScreen) {
         this.board = board;
         this.animation = animation;
         this.gameScreen = gameScreen;
+
+
     }
 
     /**
@@ -38,6 +42,10 @@ public class BoardInputHandler extends InputAdapter {
             }
             return true;
         }
+        if (keycode == Input.Keys.M) {
+            SoundManager.getInstance().toggleSound();
+            return true;
+        }
         if (keycode == Input.Keys.ESCAPE) {
             gameScreen.backToMenu();
             return true;
@@ -48,6 +56,7 @@ public class BoardInputHandler extends InputAdapter {
     /**
      * Translates screen coordinates to board squares and performs piece selection or movement.
      */
+
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         float boardSize = gameScreen.getBoardSize();
@@ -76,18 +85,42 @@ public class BoardInputHandler extends InputAdapter {
             if (piece != Piece.EMPTY && Piece.isWhite(piece) == board.isWhiteTurn()) {
                 selectedRow = row;
                 selectedColumn = column;
+                SoundManager.getInstance().playUIClick();
             }
             return true;
         }
 
         if (row == selectedRow && column == selectedColumn) {
             clearSelection();
+            SoundManager.getInstance().playUIClick();
             return true;
         }
 
+        int targetPiece = board.getPiece(row, column);
         int piece = board.getPiece(selectedRow, selectedColumn);
+        boolean isCapture = targetPiece != Piece.EMPTY
+            || (Piece.typeOf(piece) == Piece.PAWN && selectedColumn != column);
+
         if (board.move(selectedRow, selectedColumn, row, column)) {
             animation.start(piece, selectedRow, selectedColumn, row, column);
+
+            if (board.isGameOver()) {
+                String status = board.getStatusText();
+                if (status != null && status.startsWith("Checkmate")) {
+                    SoundManager.getInstance().playCheckmate();
+                } else {
+                    SoundManager.getInstance().playStalemate();
+                }
+            } else {
+                String status = board.getStatusText();
+                if (status != null && status.contains("check")) {
+                    SoundManager.getInstance().playLose();
+                } else if (isCapture) {
+                    SoundManager.getInstance().playPieceCapture();
+                } else {
+                    SoundManager.getInstance().playPieceMove();
+                }
+            }
         }
         clearSelection();
         return true;
