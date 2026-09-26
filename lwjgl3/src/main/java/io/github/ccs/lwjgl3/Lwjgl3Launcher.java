@@ -34,7 +34,7 @@ public class Lwjgl3Launcher {
         configuration.setWindowSizeLimits(400, 300, -1, -1);
         //// You can change these files; they are in lwjgl3/src/main/resources/ .
         //// They can also be loaded from the root of assets/ .
-        configuration.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
+        configuration.setWindowIcon("icon128.png", "icon64.png", "icon32.png", "icon16.png");
 
         //// This could improve compatibility with Windows machines with buggy OpenGL drivers, Macs
         //// with Apple Silicon that have to emulate compatibility with OpenGL anyway, and more.
