@@ -13,9 +13,8 @@ public class AudioSettingsTest {
         Assert.assertTrue(settings.isSoundEnabled());
         Assert.assertEquals(1.0f, settings.getMasterVolume(), 0.001f);
         Assert.assertEquals(1.0f, settings.getSFXVolume(), 0.001f);
-        Assert.assertEquals(0.5f, settings.getMusicVolume(), 0.001f);
         Assert.assertEquals(1.0f, settings.getEffectiveSFXVolume(), 0.001f);
-        Assert.assertEquals(0.5f, settings.getEffectiveMusicVolume(), 0.001f);
+        Assert.assertEquals(0.75f, settings.getEffectiveMusicVolume(), 0.001f);
     }
 
     @Test
@@ -29,9 +28,6 @@ public class AudioSettingsTest {
 
         settings.setSFXVolume(2.0f);
         Assert.assertEquals(1.0f, settings.getSFXVolume(), 0.001f);
-
-        settings.setMusicVolume(-1.0f);
-        Assert.assertEquals(0.0f, settings.getMusicVolume(), 0.001f);
     }
 
     @Test
@@ -45,7 +41,7 @@ public class AudioSettingsTest {
         settings.toggleSound();
         Assert.assertTrue(settings.isSoundEnabled());
         Assert.assertEquals(1.0f, settings.getEffectiveSFXVolume(), 0.001f);
-        Assert.assertEquals(0.5f, settings.getEffectiveMusicVolume(), 0.001f);
+        Assert.assertEquals(0.75f, settings.getEffectiveMusicVolume(), 0.001f);
     }
 
     @Test
@@ -53,9 +49,19 @@ public class AudioSettingsTest {
         AudioSettings settings = new AudioSettings();
         settings.setMasterVolume(0.5f);
         settings.setSFXVolume(0.8f);
-        settings.setMusicVolume(0.4f);
 
         Assert.assertEquals(0.4f, settings.getEffectiveSFXVolume(), 0.001f);
-        Assert.assertEquals(0.2f, settings.getEffectiveMusicVolume(), 0.001f);
+        Assert.assertEquals(0.3f, settings.getEffectiveMusicVolume(), 0.001f);
+    }
+
+    @Test
+    public void musicIsTwentyFivePercentQuieterThanSfx() {
+        AudioSettings settings = new AudioSettings();
+        Assert.assertEquals(settings.getEffectiveSFXVolume() * 0.75f,
+            settings.getEffectiveMusicVolume(), 0.001f);
+
+        settings.setSFXVolume(0.4f);
+        Assert.assertEquals(settings.getEffectiveSFXVolume() * 0.75f,
+            settings.getEffectiveMusicVolume(), 0.001f);
     }
 }

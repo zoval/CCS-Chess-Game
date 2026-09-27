@@ -63,10 +63,6 @@ public class SoundManager {
 
     public void setSFXVolume(float volume) {
         settings.setSFXVolume(volume);
-    }
-
-    public void setMusicVolume(float volume) {
-        settings.setMusicVolume(volume);
         musicPlayer.updateVolume();
     }
 
@@ -76,10 +72,6 @@ public class SoundManager {
 
     public float getSFXVolume() {
         return settings.getSFXVolume();
-    }
-
-    public float getMusicVolume() {
-        return settings.getMusicVolume();
     }
 
     /**

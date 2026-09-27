@@ -1,12 +1,14 @@
 package io.github.ccs.sound;
 
 /**
- * Manages audio settings including master, SFX, and music volumes and mute state.
+ * Manages audio settings including master and SFX volumes and mute state.
+ * Music volume is fixed at a ratio of the SFX volume so it stays quieter.
  */
 public class AudioSettings {
+    private static final float MUSIC_TO_SFX_RATIO = 0.75f;
+
     private float masterVolume = 1.0f;
     private float sfxVolume = 1.0f;
-    private float musicVolume = 0.5f;
     private boolean soundEnabled = true;
 
     public float getMasterVolume() {
@@ -23,14 +25,6 @@ public class AudioSettings {
 
     public void setSFXVolume(float sfxVolume) {
         this.sfxVolume = clamp(sfxVolume);
-    }
-
-    public float getMusicVolume() {
-        return musicVolume;
-    }
-
-    public void setMusicVolume(float musicVolume) {
-        this.musicVolume = clamp(musicVolume);
     }
 
     public boolean isSoundEnabled() {
@@ -51,7 +45,7 @@ public class AudioSettings {
     }
 
     public float getEffectiveMusicVolume() {
-        return soundEnabled ? masterVolume * musicVolume : 0f;
+        return getEffectiveSFXVolume() * MUSIC_TO_SFX_RATIO;
     }
 
     private static float clamp(float value) {
