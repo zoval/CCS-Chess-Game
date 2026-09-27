@@ -151,10 +151,6 @@ public class FirstScreen extends ScreenAdapter {
         stage.addListener(new InputListener() {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
-                if (keycode == Input.Keys.F11) {
-                    toggleFullscreen();
-                    return true;
-                }
                 if (keycode == Input.Keys.M) {
                     SoundManager.getInstance().toggleSound();
                     return true;
@@ -162,14 +158,6 @@ public class FirstScreen extends ScreenAdapter {
                 return false;
             }
         });
-    }
-
-    private void toggleFullscreen() {
-        if (Gdx.graphics.isFullscreen()) {
-            Gdx.graphics.setWindowedMode(MainGame.MENU_WINDOW_WIDTH, MainGame.MENU_WINDOW_HEIGHT);
-        } else {
-            Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
-        }
     }
 
     @Override

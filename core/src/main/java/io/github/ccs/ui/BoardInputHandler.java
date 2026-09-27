@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 
-import io.github.ccs.MainGame;
 import io.github.ccs.game_logic.Board;
 import io.github.ccs.game_logic.Piece;
 import io.github.ccs.sound.SoundManager;
@@ -27,21 +26,13 @@ public class BoardInputHandler extends InputAdapter {
     }
 
     /**
-     * Handles keyboard shortcuts including F11 for toggling fullscreen mode.
+     * Handles keyboard shortcuts for sound toggle and returning to the menu.
      *
      * @param keycode the keycode of the pressed key
      * @return true if the event was handled
      */
     @Override
     public boolean keyDown(int keycode) {
-        if (keycode == Input.Keys.F11) {
-            if (Gdx.graphics.isFullscreen()) {
-                Gdx.graphics.setWindowedMode(MainGame.GAME_WINDOW_WIDTH, MainGame.GAME_WINDOW_HEIGHT);
-            } else {
-                Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
-            }
-            return true;
-        }
         if (keycode == Input.Keys.M) {
             SoundManager.getInstance().toggleSound();
             return true;
