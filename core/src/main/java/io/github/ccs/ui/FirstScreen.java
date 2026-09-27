@@ -56,6 +56,7 @@ public class FirstScreen extends ScreenAdapter {
     public void show() {
         stage = new Stage(new ScreenViewport());
         SoundManager.getInstance().initialize();
+        SoundManager.getInstance().playMenuMusic();
         loadTextures();
         buildMenu();
         installInputHandling();

@@ -25,7 +25,7 @@ public class ChessGameScreen extends ScreenAdapter {
         renderer = new BoardRenderer(game.getSelectedTheme());
         calculateLayout();
         SoundManager.getInstance().initialize();
-        SoundManager.getInstance().playBackgroundMusic();
+        SoundManager.getInstance().playGameMusic();
         Gdx.input.setInputProcessor(new BoardInputHandler(board, animation, this));
     }
 
@@ -69,7 +69,7 @@ public class ChessGameScreen extends ScreenAdapter {
     /** Restores the menu window size and returns to the main menu. */
     public void backToMenu() {
         SoundManager.getInstance().playUIClick();
-        SoundManager.getInstance().stopBackgroundMusic();
+        SoundManager.getInstance().stopMusic();
         Gdx.graphics.setWindowedMode(MainGame.MENU_WINDOW_WIDTH, MainGame.MENU_WINDOW_HEIGHT);
         game.setScreen(new FirstScreen(game));
     }
@@ -77,12 +77,12 @@ public class ChessGameScreen extends ScreenAdapter {
     @Override
     public void hide() {
         Gdx.input.setInputProcessor(null);
-        SoundManager.getInstance().stopBackgroundMusic();
+        SoundManager.getInstance().stopMusic();
     }
 
     @Override
     public void dispose() {
-        SoundManager.getInstance().stopBackgroundMusic();
+        SoundManager.getInstance().stopMusic();
         if (renderer != null) {
             renderer.dispose();
         }
