@@ -14,19 +14,24 @@ import com.badlogic.gdx.audio.Sound;
 public class SoundLoader {
     
     private final Map<SoundCategory, Sound> sounds = new EnumMap<>(SoundCategory.class);
-    private Music backgroundMusic;
+    private Music menuMusic;
+    private Music gameMusic;
 
     /**
      * Loads all predefined sound effects and background music.
      */
     public void loadAll() {
         for (SoundCategory category : SoundCategory.values()) {
-            if (category == SoundCategory.BACKGROUND_MUSIC) {
+            if (isMusic(category)) {
                 loadMusic(category);
             } else {
                 loadSound(category);
             }
         }
+    }
+
+    private static boolean isMusic(SoundCategory category) {
+        return category == SoundCategory.MENU_MUSIC || category == SoundCategory.GAME_MUSIC;
     }
     
     /**
@@ -45,19 +50,19 @@ public class SoundLoader {
     }
     
     /**
-     * Loads background music from the specified category.
-     * Only one music track can be loaded at a time.
+     * Loads a music track from the specified category.
      *
      * @param category the music category to load
      */
     public void loadMusic(SoundCategory category) {
         try {
-            // Dispose previous music if exists
-            if (backgroundMusic != null) {
-                backgroundMusic.dispose();
+            Music music = Gdx.audio.newMusic(Gdx.files.internal(category.getFilePath()));
+            music.setLooping(true);
+            if (category == SoundCategory.MENU_MUSIC) {
+                menuMusic = music;
+            } else {
+                gameMusic = music;
             }
-            backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal(category.getFilePath()));
-            backgroundMusic.setLooping(true);
         } catch (Exception e) {
             Gdx.app.error("SoundLoader", "Failed to load music: " + category.getFilePath(), e);
         }
@@ -75,12 +80,21 @@ public class SoundLoader {
     }
     
     /**
-     * Gets the background music object.
+     * Gets the menu music object.
      *
      * @return the Music object, or null if not loaded
      */
-    public Music getMusic() {
-        return backgroundMusic;
+    public Music getMenuMusic() {
+        return menuMusic;
+    }
+
+    /**
+     * Gets the in-game music object.
+     *
+     * @return the Music object, or null if not loaded
+     */
+    public Music getGameMusic() {
+        return gameMusic;
     }
     
     /**
@@ -97,9 +111,13 @@ public class SoundLoader {
         sounds.clear();
         
         // Dispose music
-        if (backgroundMusic != null) {
-            backgroundMusic.dispose();
-            backgroundMusic = null;
+        if (menuMusic != null) {
+            menuMusic.dispose();
+            menuMusic = null;
+        }
+        if (gameMusic != null) {
+            gameMusic.dispose();
+            gameMusic = null;
         }
     }
 }

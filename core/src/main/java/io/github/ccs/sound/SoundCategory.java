@@ -13,7 +13,8 @@ public enum SoundCategory {
     UI_CLICK("sounds/UISelect.mp3"),
     START_GAME("sounds/startgame(orb).mp3"),
     LOSE("sounds/losingSoundfx(ghast).mp3"),
-    BACKGROUND_MUSIC("sounds/startgame(orb).mp3");
+    MENU_MUSIC("sounds/BACKGROUND MUSIC.mp3"),
+    GAME_MUSIC("sounds/INGAME MUSIC.mp3");
     
     private final String filePath;
     

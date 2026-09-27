@@ -132,27 +132,31 @@ public class SoundManager {
         effectPlayer.playLose();
     }
 
-    public void playBackgroundMusic() {
-        musicPlayer.playBackgroundMusic();
+    public void playMenuMusic() {
+        musicPlayer.playMenuMusic();
     }
 
-    public void stopBackgroundMusic() {
-        musicPlayer.stopBackgroundMusic();
+    public void playGameMusic() {
+        musicPlayer.playGameMusic();
     }
 
-    public void pauseBackgroundMusic() {
-        musicPlayer.pauseBackgroundMusic();
+    public void stopMusic() {
+        musicPlayer.stopMusic();
     }
 
-    public void resumeBackgroundMusic() {
-        musicPlayer.resumeBackgroundMusic();
+    public void pauseMusic() {
+        musicPlayer.pauseMusic();
+    }
+
+    public void resumeMusic() {
+        musicPlayer.resumeMusic();
     }
 
     /**
      * Disposes of all audio resources.
      */
     public void dispose() {
-        musicPlayer.stopBackgroundMusic();
+        musicPlayer.stopMusic();
         soundLoader.dispose();
         initialized = false;
         Gdx.app.log("SoundManager", "Sound system disposed");
