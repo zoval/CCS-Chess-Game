@@ -55,13 +55,12 @@ public class BoardInputHandler extends InputAdapter {
             return true;
         }
 
-        // Use direct screen coordinates because rendering is no longer using a viewport transformation
         float size = gameScreen.getBoardSize();
         float boardX = gameScreen.getBoardX();
         float boardY = gameScreen.getBoardY();
 
         // Invert Y because screen coordinates are 0,0 at top-left, but Chessboard is 0,0 at bottom-left.
-        // Map into the playable grid, which is inset within the board artwork by a decorative frame.
+        // ulol Map into the playable grid, which is inset within the board artwork by a decorative frame.
         float gridX = (screenX - boardX) / size;
         float gridY = (Gdx.graphics.getHeight() - screenY - boardY) / size;
         int column = (int) Math.floor((gridX - gameScreen.getGridX()) / gameScreen.getSquareW());

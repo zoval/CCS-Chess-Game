@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.Disposable;
 
 import io.github.ccs.assets.AssetManagerHelper;
@@ -23,6 +24,7 @@ public class BoardRenderer implements Disposable {
     private final float squareH;
 
     private final SpriteBatch batch = new SpriteBatch();
+    private final Matrix4 projectionMatrix = new Matrix4();
     private final BitmapFont font = new BitmapFont();
     private final AssetManagerHelper assetManager = new AssetManagerHelper();
     private final Texture[][] pieceTextures = new Texture[2][6];
@@ -56,6 +58,11 @@ public class BoardRenderer implements Disposable {
         }
     }
 
+    public void resize(int width, int height) {
+        projectionMatrix.setToOrtho2D(0, 0, width, height);
+        batch.setProjectionMatrix(projectionMatrix);
+    }
+
     /**
      * Renders the chessboard, all active and animating pieces, and status text.
      *
@@ -67,8 +74,14 @@ public class BoardRenderer implements Disposable {
      */
     public void render(Board board, PieceAnimation animation, float x, float y, float size) {
         batch.begin();
-        // Draw background to fill the screen
-        batch.draw(assetManager.getBackgroundTexture(), 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        Texture background = assetManager.getBackgroundTexture();
+        float width = Gdx.graphics.getWidth();
+        float height = Gdx.graphics.getHeight();
+        float scale = Math.max(width / background.getWidth(), height / background.getHeight());
+        float backgroundWidth = background.getWidth() * scale;
+        float backgroundHeight = background.getHeight() * scale;
+        batch.draw(background, (width - backgroundWidth) / 2f, (height - backgroundHeight) / 2f,
+            backgroundWidth, backgroundHeight);
         
         batch.draw(chessboard, x, y, size, size);
         drawPieces(board, animation, x, y, size);
