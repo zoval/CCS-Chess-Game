@@ -19,6 +19,7 @@ import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.ccs.MainGame;
+import io.github.ccs.sound.SoundManager;
 
 /** Main menu displaying the supplied menu artwork and navigation actions. */
 public class FirstScreen extends ScreenAdapter {
@@ -54,6 +55,8 @@ public class FirstScreen extends ScreenAdapter {
     @Override
     public void show() {
         stage = new Stage(new ScreenViewport());
+        SoundManager.getInstance().initialize();
+        SoundManager.getInstance().playMenuMusic();
         loadTextures();
         buildMenu();
         installInputHandling();
@@ -108,12 +111,19 @@ public class FirstScreen extends ScreenAdapter {
         panel.center();
 
         panel.add(createButton(playRegion, () -> {
+            SoundManager.getInstance().playStartGame();
             Gdx.graphics.setWindowedMode(MainGame.GAME_WINDOW_WIDTH, MainGame.GAME_WINDOW_HEIGHT);
             game.setScreen(new ChessGameScreen(game));
         })).spaceBottom(BUTTON_GAP).row();
         panel.add(createButton(settingsRegion, null)).spaceBottom(BUTTON_GAP).row();
-        panel.add(createButton(collectionRegion, () -> game.setScreen(new CollectionScreen(game)))).spaceBottom(BUTTON_GAP).row();
-        panel.add(createButton(quitRegion, Gdx.app::exit)).row();
+        panel.add(createButton(collectionRegion, () -> {
+            SoundManager.getInstance().playUIClick();
+            game.setScreen(new CollectionScreen(game));
+        })).spaceBottom(BUTTON_GAP).row();
+        panel.add(createButton(quitRegion, () -> {
+            SoundManager.getInstance().playUIClick();
+            Gdx.app.exit();
+        })).row();
 
         stage.addActor(panel);
     }
@@ -142,21 +152,13 @@ public class FirstScreen extends ScreenAdapter {
         stage.addListener(new InputListener() {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
-                if (keycode == Input.Keys.F11) {
-                    toggleFullscreen();
+                if (keycode == Input.Keys.M) {
+                    SoundManager.getInstance().toggleSound();
                     return true;
                 }
                 return false;
             }
         });
-    }
-
-    private void toggleFullscreen() {
-        if (Gdx.graphics.isFullscreen()) {
-            Gdx.graphics.setWindowedMode(MainGame.MENU_WINDOW_WIDTH, MainGame.MENU_WINDOW_HEIGHT);
-        } else {
-            Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
-        }
     }
 
     @Override

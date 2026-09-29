@@ -2,6 +2,7 @@ package io.github.ccs;
 
 import com.badlogic.gdx.Game;
 
+import io.github.ccs.sound.SoundManager;
 import io.github.ccs.ui.BoardTheme;
 import io.github.ccs.ui.FirstScreen;
 
@@ -29,5 +30,11 @@ public class MainGame extends Game {
 
     public void setSelectedTheme(BoardTheme selectedTheme) {
         this.selectedTheme = selectedTheme;
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+        SoundManager.getInstance().dispose();
     }
 }
