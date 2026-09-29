@@ -15,14 +15,14 @@ public class BoardInputHandler extends InputAdapter {
     private final PieceAnimation animation;
     private int selectedRow = -1;
     private int selectedColumn = -1;
-    
+    private int hoverRow = -1;
+    private int hoverColumn = -1;
+    private boolean inputBlocked;
 
     public BoardInputHandler(Board board, PieceAnimation animation, ChessGameScreen gameScreen) {
         this.board = board;
         this.animation = animation;
         this.gameScreen = gameScreen;
-
-
     }
 
     /**
@@ -33,6 +33,9 @@ public class BoardInputHandler extends InputAdapter {
      */
     @Override
     public boolean keyDown(int keycode) {
+        if (inputBlocked) {
+            return false;
+        }
         if (keycode == Input.Keys.M) {
             SoundManager.getInstance().toggleSound();
             return true;
@@ -45,27 +48,33 @@ public class BoardInputHandler extends InputAdapter {
     }
 
     /**
+     * Tracks the board square under the mouse cursor so the renderer can highlight it.
+     */
+    @Override
+    public boolean mouseMoved(int screenX, int screenY) {
+        int[] square = screenToSquare(screenX, screenY);
+        hoverRow = square[0];
+        hoverColumn = square[1];
+        return false;
+    }
+
+    /**
      * Translates screen coordinates to board squares and performs piece selection or movement.
      */
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        if (inputBlocked) {
+            return true;
+        }
         float boardSize = gameScreen.getBoardSize();
         if (board.isGameOver() || animation.isAnimating() || boardSize <= 1) {
             return true;
         }
 
-        // Use direct screen coordinates because rendering is no longer using a viewport transformation
-        float size = gameScreen.getBoardSize();
-        float boardX = gameScreen.getBoardX();
-        float boardY = gameScreen.getBoardY();
-
-        // Invert Y because screen coordinates are 0,0 at top-left, but Chessboard is 0,0 at bottom-left.
-        // Map into the playable grid, which is inset within the board artwork by a decorative frame.
-        float gridX = (screenX - boardX) / size;
-        float gridY = (Gdx.graphics.getHeight() - screenY - boardY) / size;
-        int column = (int) Math.floor((gridX - gameScreen.getGridX()) / gameScreen.getSquareW());
-        int row = (int) Math.floor((gridY - gameScreen.getGridY()) / gameScreen.getSquareH());
+        int[] square = screenToSquare(screenX, screenY);
+        int row = square[0];
+        int column = square[1];
 
         if (row < 0 || row >= 8 || column < 0 || column >= 8) {
             return true;
@@ -120,5 +129,51 @@ public class BoardInputHandler extends InputAdapter {
     public void clearSelection() {
         selectedRow = -1;
         selectedColumn = -1;
+    }
+
+    public int getSelectedRow() {
+        return selectedRow;
+    }
+
+    public int getSelectedColumn() {
+        return selectedColumn;
+    }
+
+    public int getHoverRow() {
+        return hoverRow;
+    }
+
+    public int getHoverColumn() {
+        return hoverColumn;
+    }
+
+    /** Blocks board input (e.g. while the settings dialog is open) and clears hover state. */
+    public void setInputBlocked(boolean inputBlocked) {
+        this.inputBlocked = inputBlocked;
+        if (inputBlocked) {
+            hoverRow = -1;
+            hoverColumn = -1;
+        }
+    }
+
+    /**
+     * Maps screen coordinates to board squares; returns {@code [-1, -1]} when off the grid.
+     * Rendering uses raw screen coordinates (no viewport transform), so no camera math is needed.
+     */
+    private int[] screenToSquare(int screenX, int screenY) {
+        float size = gameScreen.getBoardSize();
+        float boardX = gameScreen.getBoardX();
+        float boardY = gameScreen.getBoardY();
+
+        // Invert Y because screen coordinates are 0,0 at top-left, but the chessboard is 0,0 at bottom-left.
+        // Map into the playable grid, which is inset within the board artwork by a decorative frame.
+        float gridX = (screenX - boardX) / size;
+        float gridY = (Gdx.graphics.getHeight() - screenY - boardY) / size;
+        int column = (int) Math.floor((gridX - gameScreen.getGridX()) / gameScreen.getSquareW());
+        int row = (int) Math.floor((gridY - gameScreen.getGridY()) / gameScreen.getSquareH());
+        if (row < 0 || row >= 8 || column < 0 || column >= 8) {
+            return new int[]{-1, -1};
+        }
+        return new int[]{row, column};
     }
 }

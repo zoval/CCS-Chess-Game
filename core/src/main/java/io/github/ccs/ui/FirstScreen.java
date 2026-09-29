@@ -9,11 +9,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -47,6 +44,8 @@ public class FirstScreen extends ScreenAdapter {
     private TextureRegion settingsRegion;
     private TextureRegion collectionRegion;
     private TextureRegion quitRegion;
+    private SettingsDialog settingsDialog;
+    private final java.util.List<IlluminatedButton> menuButtons = new java.util.ArrayList<>();
 
     public FirstScreen(MainGame game) {
         this.game = game;
@@ -60,6 +59,8 @@ public class FirstScreen extends ScreenAdapter {
         loadTextures();
         buildMenu();
         installInputHandling();
+        settingsDialog = new SettingsDialog(game);
+        stage.addActor(settingsDialog);
         Gdx.input.setInputProcessor(stage);
     }
 
@@ -115,7 +116,7 @@ public class FirstScreen extends ScreenAdapter {
             Gdx.graphics.setWindowedMode(MainGame.GAME_WINDOW_WIDTH, MainGame.GAME_WINDOW_HEIGHT);
             game.setScreen(new ChessGameScreen(game));
         })).spaceBottom(BUTTON_GAP).row();
-        panel.add(createButton(settingsRegion, null)).spaceBottom(BUTTON_GAP).row();
+        panel.add(createButton(settingsRegion, () -> settingsDialog.open())).spaceBottom(BUTTON_GAP).row();
         panel.add(createButton(collectionRegion, () -> {
             SoundManager.getInstance().playUIClick();
             game.setScreen(new CollectionScreen(game));
@@ -128,23 +129,11 @@ public class FirstScreen extends ScreenAdapter {
         stage.addActor(panel);
     }
 
-    private ImageButton createButton(TextureRegion region, Runnable action) {
+    private IlluminatedButton createButton(TextureRegion region, Runnable action) {
         float aspect = region.getRegionHeight() / (float) region.getRegionWidth();
-        ImageButton button = new ImageButton(new TextureRegionDrawable(region));
+        IlluminatedButton button = new IlluminatedButton(region, action);
         button.getImageCell().size(BUTTON_WIDTH, BUTTON_WIDTH * aspect);
-
-        if (action == null) {
-            button.setTouchable(Touchable.disabled);
-            return button;
-        }
-
-        button.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                action.run();
-            }
-        });
-
+        menuButtons.add(button);
         return button;
     }
 
@@ -188,6 +177,12 @@ public class FirstScreen extends ScreenAdapter {
     public void dispose() {
         if (stage != null) {
             stage.dispose();
+        }
+        if (settingsDialog != null) {
+            settingsDialog.dispose();
+        }
+        for (IlluminatedButton button : menuButtons) {
+            button.dispose();
         }
         disposeTexture(backgroundTexture);
         disposeTexture(panelTexture);
