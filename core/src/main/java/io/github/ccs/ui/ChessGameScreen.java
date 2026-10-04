@@ -284,18 +284,26 @@ public class ChessGameScreen extends ScreenAdapter {
         hud.setTimers(clock.getWhiteMillis(), clock.getBlackMillis());
     }
 
+    private static final float AI_MOVE_DELAY = 0.35f;
+
     /** Schedules and dispatches the AI reply whenever it is the AI's turn on the live board. */
     private void updateAiDriver(float delta) {
         if (bot == null) {
             return;
         }
+        // Conditions that mean "it's genuinely AI's turn to start thinking".
+        // Deliberately excludes aiMovePending so the delay countdown isn't reset.
         boolean aiTurn = !board.isWhiteTurn() && !board.isGameOver()
-            && !animation.isAnimating() && !aiThinking && isLive();
+            && !animation.isAnimating() && !aiThinking && !board.isViewingHistory();
+
         if (aiTurn && !aiMovePending) {
             aiMovePending = true;
-            aiMoveDelay = 0.35f;
+            aiMoveDelay = AI_MOVE_DELAY;
         }
-        if (aiMovePending && !aiTurn) {
+        // Cancel only when conditions that actually invalidate the move are met
+        // (game ended, white's turn again, animation started) — NOT when aiMovePending itself
+        // makes isLive() return false (that was the livelock).
+        if (aiMovePending && (board.isGameOver() || board.isWhiteTurn() || aiThinking)) {
             aiMovePending = false;
             return;
         }
