@@ -1,6 +1,7 @@
 package io.github.ccs;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Screen;
 
 import io.github.ccs.ai_networking.Difficulty;
 import io.github.ccs.game_logic.GameState;
@@ -34,6 +35,23 @@ public class MainGame extends Game {
     @Override
     public void create() {
         setScreen(new FirstScreen(this));
+    }
+
+    /**
+     * {@link Game#setScreen} hides the outgoing screen but never disposes it, leaking its
+     * stage and textures. Dispose it here, before the incoming screen's show() runs so its
+     * cleanup (e.g. stopping music) can't undo the new screen's setup.
+     */
+    @Override
+    public void setScreen(Screen screen) {
+        Screen previous = getScreen();
+        if (previous != null) {
+            previous.hide();
+            previous.dispose();
+            // Clear the field so super.setScreen skips its own hide() on the disposed screen.
+            this.screen = null;
+        }
+        super.setScreen(screen);
     }
 
     public GameMode getGameMode() {

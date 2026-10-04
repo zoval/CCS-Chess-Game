@@ -14,7 +14,6 @@ plugins {
   id "application"
 }
 apply plugin: 'io.github.fourlastor.construo'
-apply plugin: 'org.jetbrains.kotlin.jvm'
 
 
 import io.github.fourlastor.construo.Target
@@ -28,11 +27,9 @@ java.targetCompatibility = 8
 if (JavaVersion.current().isJava9Compatible()) {
         compileJava.options.release.set(8)
 }
-kotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
 
 dependencies {
   implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
-  implementation "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
   implementation "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
   implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
   implementation project(':core')

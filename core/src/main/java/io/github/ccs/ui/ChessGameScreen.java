@@ -191,6 +191,12 @@ public class ChessGameScreen extends ScreenAdapter {
         if (gameOverOverlay != null) {
             gameOverOverlay.layout();
         }
+        if (hudStage != null) {
+            hudStage.getViewport().update(width, height, true);
+        }
+        if (settingsDialog != null) {
+            settingsDialog.layout();
+        }
     }
 
     /** The clock and AI run only on the live (newest) position outside AI turns. */

@@ -168,6 +168,9 @@ public class FirstScreen extends ScreenAdapter {
         if (width > 0 && height > 0 && stage != null) {
             stage.getViewport().update(width, height, true);
             layoutMenu(width, height);
+            if (settingsDialog != null) {
+                settingsDialog.layout();
+            }
         }
     }
 
