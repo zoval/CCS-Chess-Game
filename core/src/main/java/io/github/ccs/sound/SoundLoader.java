@@ -1,18 +1,39 @@
 package io.github.ccs.sound;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.files.FileHandle;
 
 /**
  * Handles loading and caching of sound and music assets.
  * Provides error-safe loading with null checks.
  */
 public class SoundLoader {
-    
+
+    // Fallback playlists used when directory scan returns nothing
+    static final List<String> MENU_FALLBACK = Arrays.asList(
+        "sounds/Menu page music.mp3",
+        "sounds/MenupageLabyrinthine.mp3"
+    );
+
+    static final List<String> GAME_FALLBACK = Arrays.asList(
+        "sounds/In-game music.mp3",
+        "sounds/In-gameBelow and Above.mp3",
+        "sounds/In-gameBroken Clocks.mp3",
+        "sounds/In-gameFirebugs.mp3",
+        "sounds/In-gameFireflies.mp3",
+        "sounds/In-gameLilypad.mp3",
+        "sounds/In-gameO_s Piano.mp3"
+    );
+
     private final Map<SoundCategory, Sound> sounds = new EnumMap<>(SoundCategory.class);
     private Music menuMusic;
     private Music gameMusic;
@@ -33,7 +54,7 @@ public class SoundLoader {
     private static boolean isMusic(SoundCategory category) {
         return category == SoundCategory.MENU_MUSIC || category == SoundCategory.GAME_MUSIC;
     }
-    
+
     /**
      * Loads a sound effect from the specified category.
      * Logs error but does not crash if file is missing.
@@ -48,7 +69,7 @@ public class SoundLoader {
             Gdx.app.error("SoundLoader", "Failed to load sound: " + category.getFilePath(), e);
         }
     }
-    
+
     /**
      * Loads a music track from the specified category.
      *
@@ -67,7 +88,34 @@ public class SoundLoader {
             Gdx.app.error("SoundLoader", "Failed to load music: " + category.getFilePath(), e);
         }
     }
-    
+
+    /**
+     * Builds a shuffled playlist of asset paths whose filenames start with the given prefix.
+     * Falls back to the fallback list if the directory scan finds nothing.
+     *
+     * @param prefix   filename prefix to match (e.g. "In-game" or "Menu")
+     * @param fallback list of asset paths to use when no matching files are found
+     * @return shuffled, non-empty list of asset paths
+     */
+    public static List<String> buildPlaylist(String prefix, List<String> fallback) {
+        List<String> result = new ArrayList<>();
+        try {
+            FileHandle dir = Gdx.files.internal("sounds");
+            for (FileHandle f : dir.list()) {
+                if (f.name().startsWith(prefix)) {
+                    result.add("sounds/" + f.name());
+                }
+            }
+        } catch (Exception e) {
+            Gdx.app.log("SoundLoader", "Directory scan failed, using fallback: " + e.getMessage());
+        }
+        if (result.isEmpty()) {
+            result.addAll(fallback);
+        }
+        Collections.shuffle(result);
+        return result;
+    }
+
     /**
      * Gets a loaded sound by category.
      * Returns null if sound failed to load or wasn't loaded.
@@ -78,7 +126,7 @@ public class SoundLoader {
     public Sound getSound(SoundCategory category) {
         return sounds.get(category);
     }
-    
+
     /**
      * Gets the menu music object.
      *
@@ -96,21 +144,19 @@ public class SoundLoader {
     public Music getGameMusic() {
         return gameMusic;
     }
-    
+
     /**
      * Disposes all loaded sound and music resources.
      * Must be called to prevent memory leaks.
      */
     public void dispose() {
-        // Dispose all sounds
         for (Sound sound : sounds.values()) {
             if (sound != null) {
                 sound.dispose();
             }
         }
         sounds.clear();
-        
-        // Dispose music
+
         if (menuMusic != null) {
             menuMusic.dispose();
             menuMusic = null;
