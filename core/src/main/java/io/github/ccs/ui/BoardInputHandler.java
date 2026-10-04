@@ -31,15 +31,15 @@ public class BoardInputHandler extends InputAdapter {
      */
     @Override
     public boolean keyDown(int keycode) {
+        if (keycode == Input.Keys.ESCAPE) {
+            gameScreen.handleEscape();
+            return true;
+        }
         if (inputBlocked) {
             return false;
         }
         if (keycode == Input.Keys.M) {
             SoundManager.getInstance().toggleSound();
-            return true;
-        }
-        if (keycode == Input.Keys.ESCAPE) {
-            gameScreen.backToMenu();
             return true;
         }
         return false;

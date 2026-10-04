@@ -150,7 +150,7 @@ public class ChessGameScreen extends ScreenAdapter {
             hud.tick(delta);
             hud.refreshState();
             hud.setTimers(clock.getWhiteMillis(), clock.getBlackMillis());
-            boolean navAllowed = isLive() && !animation.isAnimating()
+            boolean navAllowed = !aiThinking && !aiMovePending && !animation.isAnimating()
                 && !(settingsDialog != null && settingsDialog.isOpen())
                 && !(promotionDialog != null && promotionDialog.isOpen());
             hud.setNavEnabled(navAllowed && board.canStepBack(),
@@ -206,7 +206,7 @@ public class ChessGameScreen extends ScreenAdapter {
 
     /** View-only review: rewinds one position; input and clock stay paused. */
     private void stepHistoryBack() {
-        if (!isLive() || animation.isAnimating() || !board.canStepBack()) {
+        if (aiThinking || aiMovePending || animation.isAnimating() || !board.canStepBack()) {
             return;
         }
         inputHandler.clearSelection();
@@ -215,7 +215,7 @@ public class ChessGameScreen extends ScreenAdapter {
 
     /** View-only review: advances one position until back to the live game. */
     private void stepHistoryForward() {
-        if (!isLive() || animation.isAnimating() || !board.canStepForward()) {
+        if (aiThinking || aiMovePending || animation.isAnimating() || !board.canStepForward()) {
             return;
         }
         inputHandler.clearSelection();
@@ -470,6 +470,11 @@ public class ChessGameScreen extends ScreenAdapter {
             Gdx.graphics.setWindowedMode(MainGame.MENU_WINDOW_WIDTH, MainGame.MENU_WINDOW_HEIGHT);
         }
         game.setScreen(new FirstScreen(game));
+    }
+
+    /** ESC during play returns to the menu immediately. */
+    void handleEscape() {
+        backToMenu();
     }
 
 

@@ -123,6 +123,7 @@ public final class Board {
         fiftyMoveRule.recordMove(pawnMoved, captureMade);
         specialMoves.recordMove(fromRow, fromColumn, toRow, toColumn, piece);
         whiteTurn = !whiteTurn;
+        repetitionRule.truncate(history.getCurrentIndex() + 1);
         repetitionRule.record(position, whiteTurn, specialMoves);
         gameStatus.update(position, moveValidator, whiteTurn, fiftyMoveRule.isDraw(),
                 repetitionRule.isThreefoldRepetition(), InsufficientMaterial.isInsufficient(position));
@@ -323,7 +324,6 @@ public final class Board {
             return false;
         }
         applySnapshot(snapshot);
-        repetitionRule.truncate(history.getCurrentIndex() + 1);
         return true;
     }
 
@@ -338,7 +338,6 @@ public final class Board {
             return false;
         }
         applySnapshot(snapshot);
-        repetitionRule.truncate(history.getCurrentIndex() + 1);
         return true;
     }
 
