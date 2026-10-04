@@ -36,6 +36,7 @@ public class ChessGameScreen extends ScreenAdapter {
     @Override
     public void show() {
         renderer = new BoardRenderer(game.getSelectedTheme());
+        renderer.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         calculateLayout();
         SoundManager.getInstance().initialize();
         SoundManager.getInstance().playGameMusic();
@@ -105,9 +106,12 @@ public class ChessGameScreen extends ScreenAdapter {
 
     @Override
     public void resize(int width, int height) {
+        if (width <= 0 || height <= 0) {
+            return;
+        }
         calculateLayout();
-        if (hudStage != null) {
-            hudStage.getViewport().update(width, height, true);
+        if (renderer != null) {
+            renderer.resize(width, height);
         }
     }
 
@@ -120,11 +124,11 @@ public class ChessGameScreen extends ScreenAdapter {
     public float getSquareW() { return renderer.getSquareW(); }
     public float getSquareH() { return renderer.getSquareH(); }
 
-    /** Restores the menu window size and returns to the main menu. */
+    /** Restores the menu window size when windowed and returns to the main menu. */
     public void backToMenu() {
-        SoundManager.getInstance().playUIClick();
-        SoundManager.getInstance().stopMusic();
-        Gdx.graphics.setWindowedMode(MainGame.MENU_WINDOW_WIDTH, MainGame.MENU_WINDOW_HEIGHT);
+        if (!Gdx.graphics.isFullscreen()) {
+            Gdx.graphics.setWindowedMode(MainGame.MENU_WINDOW_WIDTH, MainGame.MENU_WINDOW_HEIGHT);
+        }
         game.setScreen(new FirstScreen(game));
     }
 

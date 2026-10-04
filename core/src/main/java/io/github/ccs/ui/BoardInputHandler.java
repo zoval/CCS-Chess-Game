@@ -72,9 +72,16 @@ public class BoardInputHandler extends InputAdapter {
             return true;
         }
 
-        int[] square = screenToSquare(screenX, screenY);
-        int row = square[0];
-        int column = square[1];
+        float size = gameScreen.getBoardSize();
+        float boardX = gameScreen.getBoardX();
+        float boardY = gameScreen.getBoardY();
+
+        // Invert Y because screen coordinates are 0,0 at top-left, but Chessboard is 0,0 at bottom-left.
+        // ulol Map into the playable grid, which is inset within the board artwork by a decorative frame.
+        float gridX = (screenX - boardX) / size;
+        float gridY = (Gdx.graphics.getHeight() - screenY - boardY) / size;
+        int column = (int) Math.floor((gridX - gameScreen.getGridX()) / gameScreen.getSquareW());
+        int row = (int) Math.floor((gridY - gameScreen.getGridY()) / gameScreen.getSquareH());
 
         if (row < 0 || row >= 8 || column < 0 || column >= 8) {
             return true;

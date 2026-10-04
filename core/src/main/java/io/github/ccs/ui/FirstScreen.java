@@ -22,15 +22,18 @@ import io.github.ccs.sound.SoundManager;
 public class FirstScreen extends ScreenAdapter {
     private static final float PANEL_WIDTH = 400f;
     private static final float PANEL_HEIGHT = 484f;
-    private static final float PANEL_RIGHT_MARGIN = 48f;
     private static final float PANEL_FRAME_PAD = 20f;
     private static final float BUTTON_WIDTH = 330f;
     private static final float BUTTON_GAP = 16f;
     private static final float TITLE_WIDTH = 500f;
-    private static final float TITLE_TOP_MARGIN = 24f;
+    private static final float TITLE_PANEL_GAP = 40f;
+    private static final float TITLE_PANEL_TOP_OVERLAP = 20f;
 
     private final MainGame game;
     private Stage stage;
+    private Image backgroundImage;
+    private Image titleImage;
+    private Table menuPanel;
     private Texture backgroundTexture;
     private Texture panelTexture;
     private Texture titleTexture;
@@ -90,43 +93,43 @@ public class FirstScreen extends ScreenAdapter {
     }
 
     private void buildMenu() {
-        Image background = new Image(backgroundTexture);
-        background.setFillParent(true);
-        background.setScaling(Scaling.fill);
-        stage.addActor(background);
+        backgroundImage = new Image(backgroundTexture);
+        backgroundImage.setScaling(Scaling.fill);
+        stage.addActor(backgroundImage);
 
-        float panelLeftX = Gdx.graphics.getWidth() - PANEL_RIGHT_MARGIN - PANEL_WIDTH;
+        titleImage = new Image(new TextureRegionDrawable(titleRegion));
+        titleImage.setSize(TITLE_WIDTH, TITLE_WIDTH * titleRegion.getRegionHeight() / (float) titleRegion.getRegionWidth());
+        stage.addActor(titleImage);
 
-        Image title = new Image(new TextureRegionDrawable(titleRegion));
-        title.setSize(TITLE_WIDTH, TITLE_WIDTH * titleRegion.getRegionHeight() / (float) titleRegion.getRegionWidth());
-        // Centered in the space left of the panel so it never slides under it.
-        title.setPosition((panelLeftX - title.getWidth()) / 2f,
-            Gdx.graphics.getHeight() - TITLE_TOP_MARGIN - title.getHeight());
-        stage.addActor(title);
+        menuPanel = new Table();
+        menuPanel.setBackground(new TextureRegionDrawable(panelRegion));
+        menuPanel.setSize(PANEL_WIDTH, PANEL_HEIGHT);
+        menuPanel.pad(PANEL_FRAME_PAD);
+        menuPanel.center();
 
-        Table panel = new Table();
-        panel.setBackground(new TextureRegionDrawable(panelRegion));
-        panel.setSize(PANEL_WIDTH, PANEL_HEIGHT);
-        panel.setPosition(panelLeftX, (Gdx.graphics.getHeight() - PANEL_HEIGHT) / 2f);
-        panel.pad(PANEL_FRAME_PAD);
-        panel.center();
-
-        panel.add(createButton(playRegion, () -> {
-            SoundManager.getInstance().playStartGame();
-            Gdx.graphics.setWindowedMode(MainGame.GAME_WINDOW_WIDTH, MainGame.GAME_WINDOW_HEIGHT);
+        menuPanel.add(createButton(playRegion, () -> {
+            if (!Gdx.graphics.isFullscreen()) {
+                Gdx.graphics.setWindowedMode(MainGame.GAME_WINDOW_WIDTH, MainGame.GAME_WINDOW_HEIGHT);
+            }
             game.setScreen(new ChessGameScreen(game));
         })).spaceBottom(BUTTON_GAP).row();
-        panel.add(createButton(settingsRegion, () -> settingsDialog.open())).spaceBottom(BUTTON_GAP).row();
-        panel.add(createButton(collectionRegion, () -> {
-            SoundManager.getInstance().playUIClick();
-            game.setScreen(new CollectionScreen(game));
-        })).spaceBottom(BUTTON_GAP).row();
-        panel.add(createButton(quitRegion, () -> {
-            SoundManager.getInstance().playUIClick();
-            Gdx.app.exit();
-        })).row();
+        menuPanel.add(createButton(settingsRegion, null)).spaceBottom(BUTTON_GAP).row();
+        menuPanel.add(createButton(collectionRegion, () -> game.setScreen(new CollectionScreen(game)))).spaceBottom(BUTTON_GAP).row();
+        menuPanel.add(createButton(quitRegion, Gdx.app::exit)).row();
 
-        stage.addActor(panel);
+        stage.addActor(menuPanel);
+        layoutMenu(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    }
+
+    private void layoutMenu(float width, float height) {
+        float contentWidth = TITLE_WIDTH + TITLE_PANEL_GAP + PANEL_WIDTH;
+        float contentLeft = (width - contentWidth) / 2f;
+        float panelY = (height - PANEL_HEIGHT) / 2f;
+
+        backgroundImage.setBounds(0f, 0f, width, height);
+        titleImage.setPosition(contentLeft,
+            panelY + PANEL_HEIGHT - titleImage.getHeight() + TITLE_PANEL_TOP_OVERLAP);
+        menuPanel.setPosition(contentLeft + TITLE_WIDTH + TITLE_PANEL_GAP, panelY);
     }
 
     private IlluminatedButton createButton(TextureRegion region, Runnable action) {
@@ -165,6 +168,7 @@ public class FirstScreen extends ScreenAdapter {
     public void resize(int width, int height) {
         if (width > 0 && height > 0 && stage != null) {
             stage.getViewport().update(width, height, true);
+            layoutMenu(width, height);
         }
     }
 
