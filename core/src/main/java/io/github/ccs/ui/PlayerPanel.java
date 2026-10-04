@@ -392,13 +392,14 @@ class PlayerPanel extends Group implements Disposable {
         badgeLabel.setPosition(badgeX + 5, py + 65.5f);
         nameLabel.setPosition(px + 80, py + 64);
 
-        checkChip.setBounds(px + 46, py + 69, 52, 14);
-        checkLabel.setPosition(px + 46 + 26 - checkLabel.getPrefWidth() / 2f, py + 72);
+        checkChip.setBounds(px + 26, py + 67, 52, 14);
+        checkLabel.setPosition(px + 26 + 26 - checkLabel.getPrefWidth() / 2f, py + 70);
 
         trayImage.setBounds(px + 80, py + 28, 240, 26);
         capturedLabel.setPosition(px + 86, py + 34);
+        float capturedX = px + 86 + capturedLabel.getPrefWidth() + 6;
         for (int i = 0; i < capturedIcons.size(); i++) {
-            capturedIcons.get(i).setBounds(px + 84 + i * 15, py + 33, 14, 14);
+            capturedIcons.get(i).setBounds(capturedX + i * 15, py + 33, 14, 14);
         }
         scoreChip.setBounds(px + 328, py + 31, 44, 20);
         scoreLabel.setPosition(px + 328 + 22 - scoreLabel.getPrefWidth() / 2f, py + 36);
@@ -481,7 +482,7 @@ class PlayerPanel extends Group implements Disposable {
         for (int i = 0; i < shown; i++) {
             Texture texture = pieceTextures.get(captured.get(i));
             Image icon = new Image(new TextureRegionDrawable(new TextureRegion(texture)));
-            icon.setBounds(panelX + 84 + i * 15, panelY + 33, 14, 14);
+            icon.setBounds(panelX + 86 + capturedLabel.getPrefWidth() + 6 + i * 15, panelY + 33, 14, 14);
             capturedGroup.addActor(icon);
             capturedIcons.add(icon);
         }
