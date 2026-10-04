@@ -18,7 +18,8 @@ public class MainGame extends Game {
     public static final int GAME_WINDOW_HEIGHT = 750;
 
     private BoardTheme selectedTheme = BoardTheme.MINECRAFT;
-    
+    private boolean visualAidsEnabled = true;
+
     @Override
     public void create() {
         setScreen(new FirstScreen(this));
@@ -30,6 +31,15 @@ public class MainGame extends Game {
 
     public void setSelectedTheme(BoardTheme selectedTheme) {
         this.selectedTheme = selectedTheme;
+    }
+
+    /** @return true when in-game visual aids (move hints, highlights) should be rendered. */
+    public boolean isVisualAidsEnabled() {
+        return visualAidsEnabled;
+    }
+
+    public void setVisualAidsEnabled(boolean visualAidsEnabled) {
+        this.visualAidsEnabled = visualAidsEnabled;
     }
 
     @Override
