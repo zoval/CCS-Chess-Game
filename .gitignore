@@ -162,3 +162,9 @@ Thumbs.db
 ## You could also add that configuration to the text in nativeimage.gradle .
 ## You should delete or comment out the next line if you have configuration in a different resource-config.json .
 **/resource-config.json
+.hormachuelos/attachments/Ingame_UI.html
+.hormachuelos/attachments/menuv2.html
+.qoder/settings.local.json
+core/assets/references/Generate_photos_2026-09-29_17-03.md
+core/assets/references/reference.jpg
+core/assets/references/tite kubo.html
