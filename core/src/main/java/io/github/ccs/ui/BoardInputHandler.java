@@ -12,16 +12,14 @@ import io.github.ccs.sound.SoundManager;
 public class BoardInputHandler extends InputAdapter {
     private final Board board;
     private final ChessGameScreen gameScreen;
-    private final PieceAnimation animation;
     private int selectedRow = -1;
     private int selectedColumn = -1;
     private int hoverRow = -1;
     private int hoverColumn = -1;
     private boolean inputBlocked;
 
-    public BoardInputHandler(Board board, PieceAnimation animation, ChessGameScreen gameScreen) {
+    public BoardInputHandler(Board board, ChessGameScreen gameScreen) {
         this.board = board;
-        this.animation = animation;
         this.gameScreen = gameScreen;
     }
 
@@ -68,7 +66,7 @@ public class BoardInputHandler extends InputAdapter {
             return true;
         }
         float boardSize = gameScreen.getBoardSize();
-        if (board.isGameOver() || animation.isAnimating() || boardSize <= 1) {
+        if (board.isGameOver() || gameScreen.isAnimating() || boardSize <= 1) {
             return true;
         }
 
@@ -103,32 +101,12 @@ public class BoardInputHandler extends InputAdapter {
             return true;
         }
 
-        int targetPiece = board.getPiece(row, column);
-        int piece = board.getPiece(selectedRow, selectedColumn);
-        boolean isCapture = targetPiece != Piece.EMPTY
-            || (Piece.typeOf(piece) == Piece.PAWN && selectedColumn != column);
-
-        if (board.move(selectedRow, selectedColumn, row, column)) {
-            animation.start(piece, selectedRow, selectedColumn, row, column);
-
-            if (board.isGameOver()) {
-                String status = board.getStatusText();
-                if (status != null && status.startsWith("Checkmate")) {
-                    SoundManager.getInstance().playCheckmate();
-                } else {
-                    SoundManager.getInstance().playStalemate();
-                }
-            } else {
-                String status = board.getStatusText();
-                if (status != null && status.contains("check")) {
-                    SoundManager.getInstance().playLose();
-                } else if (isCapture) {
-                    SoundManager.getInstance().playPieceCapture();
-                } else {
-                    SoundManager.getInstance().playPieceMove();
-                }
-            }
+        if (board.isPromotionMove(selectedRow, selectedColumn, row, column)) {
+            gameScreen.promptPromotion(selectedRow, selectedColumn, row, column);
+            return true;
         }
+
+        gameScreen.applyHumanMove(selectedRow, selectedColumn, row, column);
         clearSelection();
         return true;
     }

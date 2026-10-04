@@ -1,5 +1,7 @@
 package io.github.ccs.ai_networking;
 
+import io.github.ccs.game_logic.Piece;
+
 /**
  * A lightweight, self-contained chess position used by the AI search.
  * Squares hold signed piece IDs (see {@link io.github.ccs.game_logic.Piece});
@@ -50,12 +52,18 @@ public class AIPosition {
 
     /**
      * Moves the piece on the from-square to the to-square without any legality
-     * checks, and records the move for later inspection.
+     * checks, records the move for later inspection, and auto-queens a pawn
+     * reaching the last rank so the search always sees promotions.
      */
     public void apply(Move move) {
         int piece = board[move.fromRow][move.fromColumn];
 
         board[move.fromRow][move.fromColumn] = 0;
+
+        if (Piece.typeOf(piece) == Piece.PAWN && (move.toRow == 0 || move.toRow == 7)) {
+            piece = Piece.forColor(Piece.QUEEN, Piece.isWhite(piece));
+        }
+
         board[move.toRow][move.toColumn] = piece;
 
         lastFromRow = move.fromRow;

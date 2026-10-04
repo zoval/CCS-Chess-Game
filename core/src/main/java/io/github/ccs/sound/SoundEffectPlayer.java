@@ -97,4 +97,8 @@ public class SoundEffectPlayer {
     public void playLose() {
         play(SoundCategory.LOSE);
     }
+
+    public void playPromotionFlash() {
+        play(SoundCategory.PROMOTION_FLASH);
+    }
 }

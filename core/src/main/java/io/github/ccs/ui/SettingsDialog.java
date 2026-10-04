@@ -2,6 +2,7 @@ package io.github.ccs.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -13,12 +14,14 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Disposable;
 
 import io.github.ccs.MainGame;
@@ -48,6 +51,10 @@ public class SettingsDialog extends Group implements Disposable {
     private final Slider sfxSlider;
     private final TextButton soundToggle;
     private final TextButton visualAidsToggle;
+    private final TextButton saveButton;
+    private final Label savedLabel;
+    private Runnable saveHandler;
+    private float saveToastTimer;
 
     public SettingsDialog(MainGame game) {
         this.game = game;
@@ -133,6 +140,35 @@ public class SettingsDialog extends Group implements Disposable {
             }
         });
         addActor(closeButton);
+
+        // Overlay actors for the VS-AI-only save flow; they sit in the
+        // window's bottom padding so the Table layout is untouched.
+        saveButton = createToggle();
+        saveButton.setText("SAVE GAME");
+        saveButton.setVisible(false);
+        float saveWidth = windowW * 0.52f;
+        saveButton.setSize(saveWidth, windowH * 0.085f);
+        saveButton.setPosition(windowX + (windowW - saveWidth) / 2f, windowY + windowH * 0.015f);
+        saveButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                SoundManager.getInstance().playUIClick();
+                saveButton.setChecked(false);
+                if (saveHandler != null) {
+                    saveHandler.run();
+                }
+                saveToastTimer = 1.6f;
+                savedLabel.setVisible(true);
+            }
+        });
+        addActor(saveButton);
+
+        savedLabel = new Label("GAME SAVED", new Label.LabelStyle(font, new Color(0.55f, 0.85f, 0.35f, 1f)));
+        savedLabel.setVisible(false);
+        savedLabel.setSize(windowW, windowH * 0.06f);
+        savedLabel.setAlignment(Align.center);
+        savedLabel.setPosition(windowX, windowY + windowH * 0.80f);
+        addActor(savedLabel);
 
         musicSlider.setValue(SoundManager.getInstance().getMasterVolume());
         sfxSlider.setValue(SoundManager.getInstance().getSFXVolume());
@@ -233,6 +269,31 @@ public class SettingsDialog extends Group implements Disposable {
         boolean enabled = game.isVisualAidsEnabled();
         visualAidsToggle.setChecked(enabled);
         visualAidsToggle.setText("VISUAL AIDS: " + (enabled ? "ON" : "OFF"));
+    }
+
+    @Override
+    public void act(float delta) {
+        super.act(delta);
+        if (saveToastTimer > 0f) {
+            saveToastTimer -= delta;
+            if (saveToastTimer <= 0f) {
+                savedLabel.setVisible(false);
+            }
+        }
+    }
+
+    /** Shows or hides the SAVE GAME button (used only in VS AI mode). */
+    public void showSaveButton(boolean visible) {
+        saveButton.setVisible(visible);
+        if (!visible) {
+            savedLabel.setVisible(false);
+            saveToastTimer = 0f;
+        }
+    }
+
+    /** Sets the callback run when SAVE GAME is clicked. */
+    public void setSaveHandler(Runnable saveHandler) {
+        this.saveHandler = saveHandler;
     }
 
     public boolean isOpen() {

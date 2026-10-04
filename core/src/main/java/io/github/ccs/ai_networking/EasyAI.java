@@ -10,25 +10,26 @@ import io.github.ccs.game_logic.Board;
  * Beginner bot: plays a uniformly random legal move, with a 60% bias toward
  * capturing moves when any capture is available.
  */
-public final class EasyAI {
+public final class EasyAI implements ChessAI {
 
     private static final double CAPTURE_BIAS = 0.60;
 
     private final Random random = new Random();
 
     /**
-     * Chooses a random move for the side to move and plays it on the board.
+     * Picks a random move for the side to move without touching the board.
      *
-     * @return true if a move was played; false if the side has no legal moves.
+     * @return the chosen move, or null if the side has no legal moves.
      */
-    public boolean makeMove(Board board) {
+    @Override
+    public Move computeMove(Board board) {
         boolean white = board.isWhiteTurn();
 
         AIPosition position = AIUtils.read(board);
         List<Move> moves = AIUtils.legalMoves(position, white);
 
         if (moves.isEmpty()) {
-            return false;
+            return null;
         }
 
         List<Move> captures = new ArrayList<Move>();
@@ -39,14 +40,10 @@ public final class EasyAI {
             }
         }
 
-        Move chosen;
-
         if (!captures.isEmpty() && random.nextDouble() < CAPTURE_BIAS) {
-            chosen = AIUtils.randomMove(captures, random);
-        } else {
-            chosen = AIUtils.randomMove(moves, random);
+            return AIUtils.randomMove(captures, random);
         }
 
-        return AIUtils.play(board, chosen);
+        return AIUtils.randomMove(moves, random);
     }
 }

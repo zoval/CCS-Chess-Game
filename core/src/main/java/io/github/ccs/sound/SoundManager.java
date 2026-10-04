@@ -108,6 +108,10 @@ public class SoundManager {
         effectPlayer.playPieceMove();
     }
 
+    public void playPromotionFlash() {
+        effectPlayer.playPromotionFlash();
+    }
+
     public void playPieceCapture() {
         effectPlayer.playPieceCapture();
     }

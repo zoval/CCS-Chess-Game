@@ -1,81 +1,139 @@
 package io.github.ccs.ai_networking;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.github.ccs.game_logic.Board;
 
 /**
- * Advanced bot: fixed-depth-2 alpha-beta minimax over material evaluation.
- * Same search as {@link MediumAI} but prunes branches that cannot influence
- * the final choice, and searches captures first for more cutoffs.
+ * Advanced bot (~1200 Elo): iterative-deepening alpha-beta search (depth 1-4)
+ * over material plus piece-square tables, with a capture-only quiescence
+ * search, MVV-LVA move ordering, and ply-adjusted mate scores. Stops starting
+ * new depth iterations once the soft budget is spent and aborts mid-search at
+ * the hard deadline, always keeping the best move of the last completed depth.
+ * No transposition table, null-move pruning, or killer moves.
  */
-public final class HardAI {
+public final class HardAI implements ChessAI {
 
-    private static final int DEPTH = 2;
+    private static final int MAX_DEPTH = 4;
     private static final int MATE = 1000000;
+    private static final long HARD_BUDGET_MILLIS = 8000;
+    private static final int QUIESCENCE_MAX_DEPTH = 6;
+    private static final int NODE_CHECK_MASK = 1023;
 
-    /**
-     * Searches all legal moves at depth 2 with alpha-beta pruning and plays
-     * the best one.
-     *
-     * @return true if a move was played; false if the side has no legal moves.
-     */
-    public boolean makeMove(Board board) {
+    private long hardDeadline;
+    private boolean aborted;
+    private int nodes;
+
+    @Override
+    public Move computeMove(Board board) {
+        return computeMove(board, DEFAULT_SOFT_BUDGET_MILLIS);
+    }
+
+    @Override
+    public Move computeMove(Board board, long softBudgetMillis) {
         boolean white = board.isWhiteTurn();
 
         AIPosition position = AIUtils.read(board);
         List<Move> moves = AIUtils.legalMoves(position, white);
 
         if (moves.isEmpty()) {
-            return false;
+            return null;
         }
 
-        Move bestMove = null;
-        int bestScore = Integer.MIN_VALUE;
+        if (moves.size() == 1) {
+            return moves.get(0);
+        }
 
-        List<Move> ordered = AIUtils.orderedMoves(position, moves);
+        List<Move> ordered = AIUtils.searchOrderedMoves(position, moves);
+        Move bestMove = ordered.get(0);
 
-        for (Move move : ordered) {
-            AIPosition next = new AIPosition(position);
-            next.apply(move);
+        long start = System.currentTimeMillis();
+        hardDeadline = start + HARD_BUDGET_MILLIS;
+        aborted = false;
+        nodes = 0;
 
-            int score = search(next, !white, DEPTH - 1,
-                    Integer.MIN_VALUE + 1, Integer.MAX_VALUE - 1, white);
+        for (int depth = 1; depth <= MAX_DEPTH; depth++) {
+            Move depthBest = null;
+            int alpha = Integer.MIN_VALUE + 1;
+            int beta = Integer.MAX_VALUE - 1;
 
-            if (bestMove == null || score > bestScore) {
-                bestMove = move;
-                bestScore = score;
+            for (Move move : ordered) {
+                AIPosition next = new AIPosition(position);
+                next.apply(move);
+
+                int score = search(next, !white, depth - 1, 1, alpha, beta, white);
+
+                if (aborted) {
+                    break;
+                }
+
+                if (depthBest == null || score > alpha) {
+                    depthBest = move;
+                    alpha = score;
+                }
+            }
+
+            if (aborted) {
+                break;
+            }
+
+            if (depthBest != null) {
+                bestMove = depthBest;
+
+                // Search the best move first in the next, deeper iteration.
+                ordered.remove(depthBest);
+                ordered.add(0, depthBest);
+            }
+
+            // A forced mate was found; deeper search cannot improve it.
+            if (Math.abs(alpha) >= MATE - 64) {
+                break;
+            }
+
+            if (System.currentTimeMillis() - start >= softBudgetMillis) {
+                break;
             }
         }
 
-        return AIUtils.play(board, bestMove);
+        return bestMove;
     }
 
     /**
      * Alpha-beta minimax. Scores are always from the AI's point of view; the
      * AI maximizes on its own turns and minimizes on the opponent's turns.
-     * Branches outside the {@code [alpha, beta]} window are pruned.
-     * Checkmate is scored as a large constant (larger when it happens sooner),
-     * stalemate as 0.
+     * Branches outside the {@code [alpha, beta]} window are pruned. Checkmate
+     * is scored relative to the ply so faster mates are preferred; stalemate
+     * scores 0.
      */
-    private int search(AIPosition position, boolean currentTurn, int depth,
+    private int search(AIPosition position, boolean currentTurn, int depth, int ply,
             int alpha, int beta, boolean aiWhite) {
 
         if (depth == 0) {
-            return AIUtils.evaluate(position, aiWhite);
+            return quiescence(position, currentTurn, ply, alpha, beta, aiWhite,
+                    QUIESCENCE_MAX_DEPTH);
+        }
+
+        if ((++nodes & NODE_CHECK_MASK) == 0 && System.currentTimeMillis() >= hardDeadline) {
+            aborted = true;
+        }
+
+        if (aborted) {
+            return 0;
         }
 
         List<Move> moves = AIUtils.legalMoves(position, currentTurn);
 
         if (moves.isEmpty()) {
             if (AIUtils.isKingAttacked(position, currentTurn)) {
-                return currentTurn == aiWhite ? -MATE - depth : MATE + depth;
+                int mateScore = MATE - ply;
+                return currentTurn == aiWhite ? -mateScore : mateScore;
             }
 
             return 0;
         }
 
-        List<Move> ordered = AIUtils.orderedMoves(position, moves);
+        List<Move> ordered = AIUtils.searchOrderedMoves(position, moves);
 
         if (currentTurn == aiWhite) {
             int best = Integer.MIN_VALUE + 1;
@@ -84,7 +142,11 @@ public final class HardAI {
                 AIPosition next = new AIPosition(position);
                 next.apply(move);
 
-                int score = search(next, !currentTurn, depth - 1, alpha, beta, aiWhite);
+                int score = search(next, !currentTurn, depth - 1, ply + 1, alpha, beta, aiWhite);
+
+                if (aborted) {
+                    return 0;
+                }
 
                 if (score > best) {
                     best = score;
@@ -108,7 +170,123 @@ public final class HardAI {
             AIPosition next = new AIPosition(position);
             next.apply(move);
 
-            int score = search(next, !currentTurn, depth - 1, alpha, beta, aiWhite);
+            int score = search(next, !currentTurn, depth - 1, ply + 1, alpha, beta, aiWhite);
+
+            if (aborted) {
+                return 0;
+            }
+
+            if (score < best) {
+                best = score;
+            }
+
+            if (best < beta) {
+                beta = best;
+            }
+
+            if (beta <= alpha) {
+                break;
+            }
+        }
+
+        return best;
+    }
+
+    /**
+     * Quiescence search: resolves the horizon by playing out tactical moves
+     * (captures and promotions, MVV-LVA ordered) until quiet, with a stand-pat
+     * cutoff so a side may keep its material instead of entering a losing
+     * capture sequence.
+     */
+    private int quiescence(AIPosition position, boolean currentTurn, int ply,
+            int alpha, int beta, boolean aiWhite, int qdepth) {
+
+        int standPat = PieceSquareTables.evaluate(position, aiWhite);
+
+        if (qdepth == 0) {
+            return standPat;
+        }
+
+        if ((++nodes & NODE_CHECK_MASK) == 0 && System.currentTimeMillis() >= hardDeadline) {
+            aborted = true;
+        }
+
+        if (aborted) {
+            return 0;
+        }
+
+        List<Move> tactical = new ArrayList<Move>();
+
+        for (Move move : AIUtils.legalMoves(position, currentTurn)) {
+            if (move.isCapture() || AIUtils.isPromotion(position, move)) {
+                tactical.add(move);
+            }
+        }
+
+        if (tactical.isEmpty()) {
+            return standPat;
+        }
+
+        List<Move> ordered = AIUtils.searchOrderedMoves(position, tactical);
+
+        if (currentTurn == aiWhite) {
+            int best = standPat;
+
+            if (best > alpha) {
+                alpha = best;
+            }
+
+            if (beta <= alpha) {
+                return best;
+            }
+
+            for (Move move : ordered) {
+                AIPosition next = new AIPosition(position);
+                next.apply(move);
+
+                int score = quiescence(next, !currentTurn, ply + 1, alpha, beta, aiWhite,
+                        qdepth - 1);
+
+                if (aborted) {
+                    return 0;
+                }
+
+                if (score > best) {
+                    best = score;
+                }
+
+                if (best > alpha) {
+                    alpha = best;
+                }
+
+                if (beta <= alpha) {
+                    break;
+                }
+            }
+
+            return best;
+        }
+
+        int best = standPat;
+
+        if (best < beta) {
+            beta = best;
+        }
+
+        if (beta <= alpha) {
+            return best;
+        }
+
+        for (Move move : ordered) {
+            AIPosition next = new AIPosition(position);
+            next.apply(move);
+
+            int score = quiescence(next, !currentTurn, ply + 1, alpha, beta, aiWhite,
+                    qdepth - 1);
+
+            if (aborted) {
+                return 0;
+            }
 
             if (score < best) {
                 best = score;

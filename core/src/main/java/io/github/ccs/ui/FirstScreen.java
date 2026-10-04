@@ -107,14 +107,13 @@ public class FirstScreen extends ScreenAdapter {
         menuPanel.pad(PANEL_FRAME_PAD);
         menuPanel.center();
 
-        menuPanel.add(createButton(playRegion, () -> {
-            if (!Gdx.graphics.isFullscreen()) {
-                Gdx.graphics.setWindowedMode(MainGame.GAME_WINDOW_WIDTH, MainGame.GAME_WINDOW_HEIGHT);
-            }
-            game.setScreen(new ChessGameScreen(game));
+        menuPanel.add(createButton(playRegion, () -> game.setScreen(new OpponentSelectScreen(game))))
+            .spaceBottom(BUTTON_GAP).row();
+        menuPanel.add(createButton(settingsRegion, () -> {
+            SoundManager.getInstance().playUIClick();
+            settingsDialog.open();
         })).spaceBottom(BUTTON_GAP).row();
-        menuPanel.add(createButton(settingsRegion, null)).spaceBottom(BUTTON_GAP).row();
-        menuPanel.add(createButton(collectionRegion, () -> game.setScreen(new CollectionScreen(game)))).spaceBottom(BUTTON_GAP).row();
+        menuPanel.add(createButton(collectionRegion, () -> game.setScreen(new MapSelectScreen(game)))).spaceBottom(BUTTON_GAP).row();
         menuPanel.add(createButton(quitRegion, Gdx.app::exit)).row();
 
         stage.addActor(menuPanel);

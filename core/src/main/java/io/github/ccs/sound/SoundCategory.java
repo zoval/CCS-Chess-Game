@@ -13,6 +13,7 @@ public enum SoundCategory {
     UI_CLICK("sounds/UISelect.mp3"),
     START_GAME("sounds/startgame(orb).mp3"),
     LOSE("sounds/losingSoundfx(ghast).mp3"),
+    PROMOTION_FLASH("sounds/drawORstalemate1(anvil fall).mp3"),
     MENU_MUSIC("sounds/BACKGROUND MUSIC.mp3"),
     GAME_MUSIC("sounds/INGAME MUSIC.mp3");
     
