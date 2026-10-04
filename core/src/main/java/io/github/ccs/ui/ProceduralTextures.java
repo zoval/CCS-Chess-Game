@@ -14,7 +14,9 @@ final class ProceduralTextures {
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(1f, 1f, 1f, 1f);
         pixmap.fill();
-        return new Texture(pixmap);
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
     }
 
     /** Soft filled circle, white with radially falling alpha. */
@@ -32,7 +34,9 @@ final class ProceduralTextures {
                 }
             }
         }
-        return new Texture(pixmap);
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
     }
 
     /** Soft-edged ring (annulus), white with radially falling alpha on both edges. */
@@ -55,7 +59,9 @@ final class ProceduralTextures {
                 }
             }
         }
-        return new Texture(pixmap);
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
     }
 
     /** Wide soft radial gradient used for additive hover glow. */
@@ -73,7 +79,9 @@ final class ProceduralTextures {
                 }
             }
         }
-        return new Texture(pixmap);
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
     }
 
     /** Simple cog silhouette (8 teeth, holed hub) for the in-game settings button. */
@@ -105,6 +113,8 @@ final class ProceduralTextures {
                 }
             }
         }
-        return new Texture(pixmap);
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
     }
 }

@@ -28,6 +28,8 @@ public class BoardRenderer implements Disposable {
     private static final Color DARK_SQUARE_DOT = new Color(0.95f, 0.95f, 0.95f, 1f);
     private static final Color RING_TINT = new Color(0.95f, 0.28f, 0.20f, 1f);
     private static final Color CHECK_TINT = new Color(1f, 0.12f, 0.08f, 1f);
+    /** Multiplicative tint that turns the classic board art into a darker "nether brick" look. */
+    private static final Color NETHER_BOARD_TINT = new Color(0.78f, 0.52f, 0.5f, 1f);
     /**
      * Playable 8x8 grid geometry as fractions of the board texture, measured from the art
      * (both board images carry a decorative frame around the actual squares).
@@ -41,26 +43,31 @@ public class BoardRenderer implements Disposable {
     private final Matrix4 projectionMatrix = new Matrix4();
     private final BitmapFont font = new BitmapFont();
     private final AssetManagerHelper assetManager = new AssetManagerHelper();
+    private final BoardTheme theme;
     private final Texture[][] pieceTextures = new Texture[2][6];
     private final Texture chessboard;
     private final Texture pixelTexture = ProceduralTextures.whitePixel();
     private final Texture dotTexture = ProceduralTextures.softDot(64);
     private final Texture ringTexture = ProceduralTextures.softRing(64);
+    private Texture[] lightningFrames;
     private float aidTime;
+    private boolean statusTextVisible = true;
 
     public BoardRenderer(BoardTheme theme) {
-        if (theme == BoardTheme.MINECRAFT) {
-            // board/new chessboard.png (750x750): grid at (195,210 from bottom), square ~45.4 px
-            gridX = 195f / 750f;
-            gridY = 210f / 750f;
-            squareW = 45.4f / 750f;
-            squareH = 45.4f / 750f;
-        } else {
+        this.theme = theme;
+        if (theme == BoardTheme.STANDARD) {
             // pieces/board.png (2050x2050): grid at (23.5,26.5), square 250 px
             gridX = 23.5f / 2050f;
             gridY = 26.5f / 2050f;
             squareW = 250f / 2050f;
             squareH = 250f / 2050f;
+        } else {
+            // board/new chessboard.png (750x750): grid at (195,210 from bottom), square ~45.4 px
+            // (both the classic and nether maps use this board art)
+            gridX = 195f / 750f;
+            gridY = 210f / 750f;
+            squareW = 45.4f / 750f;
+            squareH = 45.4f / 750f;
         }
 
         String[] colors = {"white", "black"};
@@ -101,7 +108,7 @@ public class BoardRenderer implements Disposable {
                        int hoverRow, int hoverColumn, float delta) {
         aidTime += delta;
         batch.begin();
-        Texture background = assetManager.getBackgroundTexture();
+        Texture background = assetManager.getBackgroundTexture(theme);
         float width = Gdx.graphics.getWidth();
         float height = Gdx.graphics.getHeight();
         float scale = Math.max(width / background.getWidth(), height / background.getHeight());
@@ -110,7 +117,11 @@ public class BoardRenderer implements Disposable {
         batch.draw(background, (width - backgroundWidth) / 2f, (height - backgroundHeight) / 2f,
             backgroundWidth, backgroundHeight);
         
+        if (theme == BoardTheme.NETHER) {
+            batch.setColor(NETHER_BOARD_TINT);
+        }
         batch.draw(chessboard, x, y, size, size);
+        batch.setColor(Color.WHITE);
         if (visualAids) {
             drawVisualAids(board, x, y, size, selectedRow, selectedColumn, hoverRow, hoverColumn, false);
         }
@@ -120,8 +131,13 @@ public class BoardRenderer implements Disposable {
             drawVisualAids(board, x, y, size, selectedRow, selectedColumn, hoverRow, hoverColumn, true);
         }
         resetBatchColor();
-        font.setColor(Color.WHITE);
-        font.draw(batch, board.getStatusText(), x, y + size + 20);
+        if (animation.isFlashing()) {
+            drawPromotionFlash(animation, x, y, size);
+        }
+        if (statusTextVisible) {
+            font.setColor(Color.WHITE);
+            font.draw(batch, board.getStatusText(), x, y + size + 20);
+        }
         batch.end();
     }
 
@@ -201,24 +217,62 @@ public class BoardRenderer implements Disposable {
     private void drawPieces(Board board, PieceAnimation animation, float boardX, float boardY, float size) {
         int animTargetRow = animation.getToRow();
         int animTargetColumn = animation.getToColumn();
+        int secondaryTargetRow = animation.getSecondaryToRow();
+        int secondaryTargetColumn = animation.getSecondaryToColumn();
 
         for (int row = 0; row < 8; row++) {
             for (int column = 0; column < 8; column++) {
                 int piece = board.getPiece(row, column);
                 if (piece == Piece.EMPTY) continue;
                 if (animation.isAnimating() && row == animTargetRow && column == animTargetColumn) continue;
+                if (animation.hasSecondary() && row == secondaryTargetRow && column == secondaryTargetColumn) continue;
 
                 drawPiece(piece, squareX(column, boardX, size), squareY(row, boardY, size), squareW * size, squareH * size);
             }
         }
 
         if (animation.isAnimating()) {
+            float progress = animation.getProgress();
             float currentX = squareX(animation.getFromColumn(), boardX, size)
-                + (squareX(animation.getToColumn(), boardX, size) - squareX(animation.getFromColumn(), boardX, size)) * animation.getProgress();
+                + (squareX(animation.getToColumn(), boardX, size) - squareX(animation.getFromColumn(), boardX, size)) * progress;
             float currentY = squareY(animation.getFromRow(), boardY, size)
-                + (squareY(animation.getToRow(), boardY, size) - squareY(animation.getFromRow(), boardY, size)) * animation.getProgress();
+                + (squareY(animation.getToRow(), boardY, size) - squareY(animation.getFromRow(), boardY, size)) * progress;
 
             drawPiece(animation.getPiece(), currentX, currentY, squareW * size, squareH * size);
+
+            if (animation.hasSecondary()) {
+                float secondaryX = squareX(animation.getSecondaryFromColumn(), boardX, size)
+                    + (squareX(animation.getSecondaryToColumn(), boardX, size) - squareX(animation.getSecondaryFromColumn(), boardX, size)) * progress;
+                float secondaryY = squareY(animation.getSecondaryFromRow(), boardY, size)
+                    + (squareY(animation.getSecondaryToRow(), boardY, size) - squareY(animation.getSecondaryFromRow(), boardY, size)) * progress;
+
+                drawPiece(animation.getSecondaryPiece(), secondaryX, secondaryY, squareW * size, squareH * size);
+            }
+
+            if (animation.hasGhost()) {
+                batch.setColor(1f, 1f, 1f, Math.max(0f, 1f - progress));
+                drawPiece(animation.getGhostPiece(), squareX(animation.getGhostColumn(), boardX, size),
+                    squareY(animation.getGhostRow(), boardY, size), squareW * size, squareH * size);
+                batch.setColor(Color.WHITE);
+            }
+        }
+    }
+
+    /** Draws the current lightning frame aspect-preserved, centered over the board. */
+    private void drawPromotionFlash(PieceAnimation animation, float boardX, float boardY, float size) {
+        ensureLightningLoaded();
+        Texture frame = lightningFrames[animation.getFlashFrame()];
+        float flashWidth = size * (frame.getWidth() / (float) frame.getHeight());
+        batch.draw(frame, boardX + (size - flashWidth) / 2f, boardY, flashWidth, size);
+    }
+
+    private void ensureLightningLoaded() {
+        if (lightningFrames != null) {
+            return;
+        }
+        lightningFrames = new Texture[9];
+        for (int i = 0; i < lightningFrames.length; i++) {
+            lightningFrames[i] = new Texture(Gdx.files.internal("promotion/lightning_" + (i + 1) + ".png"));
         }
     }
 
@@ -235,6 +289,20 @@ public class BoardRenderer implements Disposable {
     public float getSquareW() { return squareW; }
     public float getSquareH() { return squareH; }
 
+    /** The HUD status pill replaces the raw status text when hidden. */
+    public void setStatusTextVisible(boolean visible) {
+        statusTextVisible = visible;
+    }
+
+    /** @return the theme texture for a signed piece ID, shared with the HUD captured tray. */
+    public Texture getPieceTexture(int signedPiece) {
+        return pieceTextures[Piece.isWhite(signedPiece) ? 0 : 1][Piece.typeOf(signedPiece) - 1];
+    }
+
+    public PlayerPanel.PieceTextures getPieceTextureAccess() {
+        return this::getPieceTexture;
+    }
+
     private void drawPiece(int piece, float x, float y, float width, float height) {
         int colorIndex = Piece.isWhite(piece) ? 0 : 1;
         int typeIndex = Piece.typeOf(piece) - 1;
@@ -249,5 +317,10 @@ public class BoardRenderer implements Disposable {
         pixelTexture.dispose();
         dotTexture.dispose();
         ringTexture.dispose();
+        if (lightningFrames != null) {
+            for (Texture frame : lightningFrames) {
+                frame.dispose();
+            }
+        }
     }
 }

@@ -22,6 +22,11 @@ public class FiftymoveRule {
         return halfmoveClock;
     }
 
+    /** Restores the halfmove clock (history navigation, save/load). */
+    public void setHalfmoveClock(int halfmoveClock) {
+        this.halfmoveClock = halfmoveClock;
+    }
+
     public void reset() {
         halfmoveClock = 0;
     }

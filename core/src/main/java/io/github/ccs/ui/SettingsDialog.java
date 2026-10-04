@@ -2,6 +2,8 @@ package io.github.ccs.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -10,27 +12,37 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Disposable;
 
 import io.github.ccs.MainGame;
 import io.github.ccs.sound.SoundManager;
 
 /**
- * Modal settings popup (wooden panel art from {@code menu/settings pop up}) with Music/SFX
- * volume sliders, a sound mute toggle, and the visual-aids toggle. Blocks input to whatever
- * is underneath while open; ESC closes it.
+ * Modal settings popup (wooden panel art from {@code menu/settings pop up}, cropped to its
+ * visible bounds). Rebuilds its layout on open and on window resize so it re-centers between
+ * the 1024x572 menu and 750x750 game windows. Blocks input to whatever is underneath while
+ * open; ESC closes it.
  */
 public class SettingsDialog extends Group implements Disposable {
-    private static final float WINDOW_ASPECT = 1056f / 1004f;
+    private static final float WINDOW_ASPECT = 875f / 824f;
+
+    // Alpha-bound crops of the transparent-canvas art (measured; x, y, w, h).
+    private static final int[] PANEL_CROP = {88, 88, 875, 824};
+    private static final int[] CLOSE_CROP = {91, 55, 182, 183};
+    private static final int[] TITLE_CROP = {37, 48, 779, 127};
+    private static final int[] MUSIC_CROP = {22, 68, 316, 73};
+    private static final int[] SFX_CROP = {22, 34, 194, 71};
+    private static final int[] KNOB_CROP = {484, 48, 77, 123};
 
     private final MainGame game;
     private final Texture panelTexture;
@@ -38,20 +50,73 @@ public class SettingsDialog extends Group implements Disposable {
     private final Texture titleTexture;
     private final Texture musicLabelTexture;
     private final Texture sfxLabelTexture;
+    private final Texture knobTexture;
     private final Texture backdropTexture;
     private final Texture trackTexture;
-    private final Texture knobTexture;
     private final Texture buttonUpTexture;
     private final Texture buttonCheckedTexture;
     private final BitmapFont font = new BitmapFont();
-    private final Slider musicSlider;
-    private final Slider sfxSlider;
-    private final TextButton soundToggle;
-    private final TextButton visualAidsToggle;
+    private final Slider.SliderStyle sliderStyle;
+    private final TextButton.TextButtonStyle toggleStyle;
+    private Slider musicSlider;
+    private Slider sfxSlider;
+    private TextButton soundToggle;
+    private TextButton visualAidsToggle;
+    private TextButton saveButton;
+    private Label savedLabel;
+    private Runnable saveHandler;
+    private float saveToastTimer;
+    private boolean saveButtonVisible;
+    private TextButton quitButton;
+    private Runnable quitAction;
 
     public SettingsDialog(MainGame game) {
         this.game = game;
 
+        panelTexture = load("menu/settings pop up/setting1 (1).png");
+        closeTexture = load("menu/settings pop up/setting2 (1).png");
+        titleTexture = load("menu/settings pop up/setting3 (1).png");
+        musicLabelTexture = load("menu/settings pop up/setting4 (1).png");
+        sfxLabelTexture = load("menu/settings pop up/sfxx.png");
+        knobTexture = load("menu/settings pop up/setting5 (1).png");
+        backdropTexture = ProceduralTextures.whitePixel();
+        trackTexture = trackBackground();
+        buttonUpTexture = buttonBackground(false);
+        buttonCheckedTexture = buttonBackground(true);
+
+        sliderStyle = new Slider.SliderStyle();
+        TextureRegionDrawable track = new TextureRegionDrawable(new TextureRegion(trackTexture));
+        track.setMinHeight(14f);
+        TextureRegionDrawable knob = cropped(knobTexture, KNOB_CROP);
+        knob.setMinWidth(30f * KNOB_CROP[2] / KNOB_CROP[3]);
+        knob.setMinHeight(30f);
+        sliderStyle.background = track;
+        sliderStyle.knob = knob;
+
+        toggleStyle = new TextButton.TextButtonStyle();
+        toggleStyle.up = new TextureRegionDrawable(new TextureRegion(buttonUpTexture));
+        toggleStyle.down = new TextureRegionDrawable(new TextureRegion(buttonCheckedTexture));
+        toggleStyle.checked = new TextureRegionDrawable(new TextureRegion(buttonCheckedTexture));
+        toggleStyle.font = font;
+
+        // Added once here: layout() rebuilds children and would duplicate this listener.
+        addListener(new InputListener() {
+            @Override
+            public boolean keyDown(InputEvent event, int keycode) {
+                if (keycode == Input.Keys.ESCAPE) {
+                    hide();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        layout();
+        setVisible(false);
+    }
+
+    /** Rebuilds the dialog for the current window size; safe to call from resize(). */
+    public void layout() {
         float stageW = Gdx.graphics.getWidth();
         float stageH = Gdx.graphics.getHeight();
         float windowH = Math.min(stageH * 0.86f, stageW * 0.86f / WINDOW_ASPECT);
@@ -59,23 +124,13 @@ public class SettingsDialog extends Group implements Disposable {
         float windowX = (stageW - windowW) / 2f;
         float windowY = (stageH - windowH) / 2f;
 
-        panelTexture = load("menu/settings pop up/setting1 (1).png");
-        closeTexture = load("menu/settings pop up/setting2 (1).png");
-        titleTexture = load("menu/settings pop up/setting3 (1).png");
-        musicLabelTexture = load("menu/settings pop up/setting4 (1).png");
-        sfxLabelTexture = load("menu/settings pop up/sfxx.png");
-        backdropTexture = ProceduralTextures.whitePixel();
-        trackTexture = ProceduralTextures.whitePixel();
-        knobTexture = ProceduralTextures.softDot(64);
-        buttonUpTexture = buttonBackground(false);
-        buttonCheckedTexture = buttonBackground(true);
-        font.getData().setScale(windowH / 320f);
-
         setSize(stageW, stageH);
+        clearChildren(true);
+        font.getData().setScale(windowH / 320f);
 
         Image backdrop = new Image(new TextureRegionDrawable(new TextureRegion(backdropTexture)));
         backdrop.setColor(0f, 0f, 0f, 0.6f);
-        backdrop.setFillParent(true);
+        backdrop.setBounds(0f, 0f, stageW, stageH);
         backdrop.addListener(new InputListener() {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
@@ -85,57 +140,55 @@ public class SettingsDialog extends Group implements Disposable {
         addActor(backdrop);
 
         Table window = new Table();
-        window.setBackground(new TextureRegionDrawable(new TextureRegion(panelTexture)));
+        window.setBackground(cropped(panelTexture, PANEL_CROP));
         window.setSize(windowW, windowH);
         window.setPosition(windowX, windowY);
         window.padLeft(windowW * 0.11f).padRight(windowW * 0.11f)
             .padTop(windowH * 0.10f).padBottom(windowH * 0.08f);
         addActor(window);
 
+        // colspan(2): single-column cells would inflate column 0 past the label width and push
+        // the slider column past the panel's right edge.
         float titleW = windowW * 0.55f;
-        Image title = new Image(new TextureRegionDrawable(new TextureRegion(titleTexture)));
-        window.add(title).width(titleW).height(titleW * 201f / 863f)
+        Image title = new Image(cropped(titleTexture, TITLE_CROP));
+        window.add(title).colspan(2).width(titleW).height(titleW * 127f / 779f)
             .spaceBottom(windowH * 0.05f).row();
 
-        musicSlider = createSlider();
         float labelW = windowW * 0.17f;
-        Image musicLabel = new Image(new TextureRegionDrawable(new TextureRegion(musicLabelTexture)));
-        window.add(musicLabel).width(labelW).height(labelW * 194f / 383f)
+        musicSlider = newSlider();
+        musicSlider.setValue(SoundManager.getInstance().getMasterVolume());
+        Image musicLabel = new Image(cropped(musicLabelTexture, MUSIC_CROP));
+        window.add(musicLabel).width(labelW).height(labelW * 73f / 316f)
             .spaceRight(windowW * 0.04f);
         window.add(musicSlider).width(windowW * 0.50f)
             .spaceBottom(windowH * 0.045f).row();
 
-        sfxSlider = createSlider();
-        Image sfxLabel = new Image(new TextureRegionDrawable(new TextureRegion(sfxLabelTexture)));
-        window.add(sfxLabel).width(labelW).height(labelW * 163f / 297f)
+        sfxSlider = newSlider();
+        sfxSlider.setValue(SoundManager.getInstance().getSFXVolume());
+        Image sfxLabel = new Image(cropped(sfxLabelTexture, SFX_CROP));
+        window.add(sfxLabel).width(labelW).height(labelW * 71f / 194f)
             .spaceRight(windowW * 0.04f);
         window.add(sfxSlider).width(windowW * 0.50f)
             .spaceBottom(windowH * 0.05f).row();
 
         soundToggle = createToggle();
         syncSoundToggle();
-        window.add(soundToggle).width(windowW * 0.52f).height(windowH * 0.085f)
+        window.add(soundToggle).colspan(2).width(windowW * 0.52f).height(windowH * 0.085f)
             .spaceBottom(windowH * 0.025f).row();
 
         visualAidsToggle = createToggle();
         syncVisualAidsToggle();
-        window.add(visualAidsToggle).width(windowW * 0.52f).height(windowH * 0.085f).row();
+        window.add(visualAidsToggle).colspan(2).width(windowW * 0.52f).height(windowH * 0.085f).row();
 
-        float closeSize = windowW * 0.13f;
-        ImageButton closeButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(closeTexture)));
-        closeButton.setSize(closeSize, closeSize * 282f / 359f);
-        closeButton.setPosition(windowX + windowW - closeSize * 0.72f,
-            windowY + windowH - closeButton.getHeight() * 0.72f);
-        closeButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                hide();
-            }
-        });
-        addActor(closeButton);
+        if (quitAction != null) {
+            quitButton = createToggle();
+            quitButton.setText("QUIT TO MENU");
+            window.add(quitButton).colspan(2).width(windowW * 0.52f).height(windowH * 0.085f)
+                .spaceTop(windowH * 0.025f).row();
+        }
 
-        musicSlider.setValue(SoundManager.getInstance().getMasterVolume());
-        sfxSlider.setValue(SoundManager.getInstance().getSFXVolume());
+        // Listeners attach after the initial syncs so the sync's setChecked() can't re-enter.
+        // layout() rebuilds fresh actors each time, so these never accumulate.
         musicSlider.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -162,19 +215,67 @@ public class SettingsDialog extends Group implements Disposable {
                 syncVisualAidsToggle();
             }
         });
-
-        addListener(new InputListener() {
-            @Override
-            public boolean keyDown(InputEvent event, int keycode) {
-                if (keycode == Input.Keys.ESCAPE) {
-                    hide();
-                    return true;
+        if (quitButton != null) {
+            quitButton.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeEvent event, Actor actor) {
+                    // setChecked(false) below re-fires changed(); ignore that nested call.
+                    if (!quitButton.isChecked()) {
+                        return;
+                    }
+                    SoundManager.getInstance().playUIClick();
+                    quitButton.setChecked(false);
+                    quitAction.run();
                 }
-                return false;
+            });
+        }
+
+        float closeW = windowW * 0.13f * 182f / 359f;
+        float closeH = closeW * 183f / 182f;
+        ImageButton closeButton = new ImageButton(cropped(closeTexture, CLOSE_CROP));
+        closeButton.setSize(closeW, closeH);
+        closeButton.setPosition(windowX + windowW - closeW * 0.75f,
+            windowY + windowH - closeH * 0.75f);
+        closeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                hide();
             }
         });
+        addActor(closeButton);
 
-        setVisible(false);
+        // Overlay actors for the VS-AI-only save flow; they sit in the
+        // window's padding bands so the Table layout is untouched.
+        saveButton = createToggle();
+        saveButton.setText("SAVE GAME");
+        saveButton.setVisible(saveButtonVisible);
+        float saveWidth = windowW * 0.52f;
+        saveButton.setSize(saveWidth, windowH * 0.085f);
+        saveButton.setPosition(windowX + (windowW - saveWidth) / 2f, windowY + windowH * 0.015f);
+        saveButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                // setChecked(false) below re-fires changed(); ignore that nested call.
+                if (!saveButton.isChecked()) {
+                    return;
+                }
+                SoundManager.getInstance().playUIClick();
+                saveButton.setChecked(false);
+                if (saveHandler != null) {
+                    saveHandler.run();
+                }
+                saveToastTimer = 1.6f;
+                savedLabel.setVisible(true);
+            }
+        });
+        addActor(saveButton);
+
+        savedLabel = new Label("GAME SAVED", new Label.LabelStyle(font, new Color(0.55f, 0.85f, 0.35f, 1f)));
+        savedLabel.setVisible(saveToastTimer > 0f);
+        savedLabel.setSize(windowW, windowH * 0.06f);
+        savedLabel.setAlignment(Align.center);
+        savedLabel.setPosition(windowX, windowY + windowH * 0.905f);
+        addActor(savedLabel);
     }
 
     private Texture load(String path) {
@@ -183,12 +284,37 @@ public class SettingsDialog extends Group implements Disposable {
         return texture;
     }
 
+    private TextureRegionDrawable cropped(Texture texture, int[] crop) {
+        return new TextureRegionDrawable(new TextureRegion(texture, crop[0], crop[1], crop[2], crop[3]));
+    }
+
     private Texture buttonBackground(boolean checked) {
         int width = 120;
         int height = 40;
         int radius = 12;
-        com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(width, height, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+        Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
         pixmap.setColor(checked ? 0.42f : 0.26f, checked ? 0.32f : 0.18f, 0.12f, 0.95f);
+        drawRoundedStrip(pixmap, 0, 0, width, height, radius);
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
+    }
+
+    /** Brown pill matching the slider art's track (setting5), instead of a white bar. */
+    private Texture trackBackground() {
+        int width = 64;
+        int height = 14;
+        Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
+        pixmap.setColor(0.05f, 0.04f, 0.03f, 0.9f);
+        drawRoundedStrip(pixmap, 0, 0, width, height, height / 2);
+        pixmap.setColor(50 / 255f, 35 / 255f, 30 / 255f, 1f);
+        drawRoundedStrip(pixmap, 1, 1, width - 2, height - 2, (height - 2) / 2);
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
+    }
+
+    private void drawRoundedStrip(Pixmap pixmap, int x0, int y0, int width, int height, int radius) {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 boolean inCorner = (x < radius && y < radius && Math.hypot(x - radius, y - radius) > radius)
@@ -197,30 +323,18 @@ public class SettingsDialog extends Group implements Disposable {
                     || (x >= width - radius && y >= height - radius
                         && Math.hypot(x - (width - radius - 1), y - (height - radius - 1)) > radius);
                 if (!inCorner) {
-                    pixmap.drawPixel(x, y);
+                    pixmap.drawPixel(x0 + x, y0 + y);
                 }
             }
         }
-        return new Texture(pixmap);
     }
 
-    private Slider createSlider() {
-        TextureRegionDrawable track = new TextureRegionDrawable(new TextureRegion(trackTexture));
-        track.setMinHeight(8f);
-        TextureRegionDrawable knob = new TextureRegionDrawable(new TextureRegion(knobTexture));
-        knob.setMinWidth(30f);
-        knob.setMinHeight(30f);
-        Slider.SliderStyle style = new Slider.SliderStyle(track, knob);
-        return new Slider(0f, 1f, 0.01f, false, style);
+    private Slider newSlider() {
+        return new Slider(0f, 1f, 0.01f, false, sliderStyle);
     }
 
     private TextButton createToggle() {
-        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
-        style.up = new TextureRegionDrawable(new TextureRegion(buttonUpTexture));
-        style.down = new TextureRegionDrawable(new TextureRegion(buttonCheckedTexture));
-        style.checked = new TextureRegionDrawable(new TextureRegion(buttonCheckedTexture));
-        style.font = font;
-        return new TextButton("", style);
+        return new TextButton("", toggleStyle);
     }
 
     private void syncSoundToggle() {
@@ -235,11 +349,44 @@ public class SettingsDialog extends Group implements Disposable {
         visualAidsToggle.setText("VISUAL AIDS: " + (enabled ? "ON" : "OFF"));
     }
 
+    @Override
+    public void act(float delta) {
+        super.act(delta);
+        if (saveToastTimer > 0f) {
+            saveToastTimer -= delta;
+            if (saveToastTimer <= 0f) {
+                savedLabel.setVisible(false);
+            }
+        }
+    }
+
+    /** Shows or hides the SAVE GAME button (used only in VS AI mode). */
+    public void showSaveButton(boolean visible) {
+        saveButtonVisible = visible;
+        saveButton.setVisible(visible);
+        if (!visible) {
+            savedLabel.setVisible(false);
+            saveToastTimer = 0f;
+        }
+    }
+
+    /** Sets the callback run when SAVE GAME is clicked. */
+    public void setSaveHandler(Runnable saveHandler) {
+        this.saveHandler = saveHandler;
+    }
+
+    /** Sets the callback run when QUIT TO MENU is clicked; wiring it adds the button. */
+    public void setQuitAction(Runnable quitAction) {
+        this.quitAction = quitAction;
+    }
+
     public boolean isOpen() {
         return isVisible();
     }
 
     public void open() {
+        layout();
+        toFront();
         setVisible(true);
         Stage stage = getStage();
         if (stage != null) {
@@ -264,9 +411,9 @@ public class SettingsDialog extends Group implements Disposable {
         titleTexture.dispose();
         musicLabelTexture.dispose();
         sfxLabelTexture.dispose();
+        knobTexture.dispose();
         backdropTexture.dispose();
         trackTexture.dispose();
-        knobTexture.dispose();
         buttonUpTexture.dispose();
         buttonCheckedTexture.dispose();
         font.dispose();

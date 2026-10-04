@@ -108,6 +108,10 @@ public class SoundManager {
         effectPlayer.playPieceMove();
     }
 
+    public void playPromotionFlash() {
+        effectPlayer.playPromotionFlash();
+    }
+
     public void playPieceCapture() {
         effectPlayer.playPieceCapture();
     }
@@ -133,11 +137,11 @@ public class SoundManager {
     }
 
     public void playMenuMusic() {
-        musicPlayer.playMenuMusic();
+        musicPlayer.setPlaylist(SoundLoader.buildPlaylist("Menu", SoundLoader.MENU_FALLBACK));
     }
 
     public void playGameMusic() {
-        musicPlayer.playGameMusic();
+        musicPlayer.setPlaylist(SoundLoader.buildPlaylist("In-game", SoundLoader.GAME_FALLBACK));
     }
 
     public void stopMusic() {

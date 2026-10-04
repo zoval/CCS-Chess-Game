@@ -473,6 +473,67 @@ public final class AIUtils {
     }
 
     /**
+     * Search-focused move ordering: promotions first, then captures sorted by
+     * MVV-LVA (most valuable victim, least valuable attacker), then the rest.
+     * Unlike {@link #orderedMoves}, this is free to reorder within the capture
+     * group. Java's sort is stable, so equal scores keep their relative order.
+     */
+    public static List<Move> searchOrderedMoves(AIPosition position, List<Move> moves) {
+        List<Move> result = new ArrayList<Move>(moves.size());
+
+        for (Move move : moves) {
+            if (isPromotion(position, move)) {
+                result.add(move);
+            }
+        }
+
+        List<Move> captures = new ArrayList<Move>();
+
+        for (Move move : moves) {
+            if (!isPromotion(position, move) && move.isCapture()) {
+                captures.add(move);
+            }
+        }
+
+        // Stable sort keeps ties in generation order.
+        java.util.Collections.sort(captures, new java.util.Comparator<Move>() {
+            @Override
+            public int compare(Move a, Move b) {
+                return captureScore(position, b) - captureScore(position, a);
+            }
+        });
+        result.addAll(captures);
+
+        for (Move move : moves) {
+            if (!isPromotion(position, move) && !move.isCapture()) {
+                result.add(move);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * @return true if the move advances a pawn to its promotion rank.
+     */
+    public static boolean isPromotion(AIPosition position, Move move) {
+        int piece = position.get(move.fromRow, move.fromColumn);
+
+        return Piece.typeOf(piece) == Piece.PAWN && (move.toRow == 0 || move.toRow == 7);
+    }
+
+    /**
+     * MVV-LVA heuristic score: value of the captured piece minus a tenth of
+     * the attacker's value, so cheap attackers capture first among equals.
+     */
+    private static int captureScore(AIPosition position, Move move) {
+        int victim = position.get(move.toRow, move.toColumn);
+        int attacker = position.get(move.fromRow, move.fromColumn);
+
+        return value(Piece.typeOf(victim)) - value(Piece.typeOf(attacker)) / 10;
+    }
+
+    /**
      * @return true if the coordinates are on the board.
      */
     private static boolean inside(int row, int column) {

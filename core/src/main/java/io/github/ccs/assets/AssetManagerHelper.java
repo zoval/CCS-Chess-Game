@@ -10,9 +10,13 @@ import io.github.ccs.ui.BoardTheme;
 
 /** Helper for loading shared board and piece textures through LibGDX's AssetManager. */
 public class AssetManagerHelper extends AssetManager {
-    // ...existing code...
     private static final String[] NAMES = {"pawn", "knight", "bishop", "rook", "queen", "king"};
-    
+
+    private static final String CLASSIC_BOARD = "board/new chessboard.png";
+    private static final String STANDARD_BOARD = "pieces/board.png";
+    private static final String DEFAULT_BACKGROUND = "board/new bg.png";
+    private static final String NETHER_BACKGROUND = "maps/nether_landscape.jpeg";
+
     private final Map<BoardTheme, Map<String, String>> piecePaths = new HashMap<>();
 
     public AssetManagerHelper() {
@@ -30,7 +34,7 @@ public class AssetManagerHelper extends AssetManager {
         }
         piecePaths.put(BoardTheme.STANDARD, standard);
 
-        // Minecraft paths - using front variant
+        // Minecraft-style paths for the classic and nether maps - using front variant
         Map<String, String> mc = new HashMap<>();
         mc.put("white-pawn", "pieces/white_mc/white_pawn[front]-64x64.png");
         mc.put("white-knight", "pieces/white_mc/white_horse[front]-64x64.png");
@@ -45,17 +49,25 @@ public class AssetManagerHelper extends AssetManager {
         mc.put("black-rook", "pieces/black_mc/Black_rook[front]-64x64 .png");
         mc.put("black-queen", "pieces/black_mc/Black_queen[front]-64x64 .png");
         mc.put("black-king", "pieces/black_mc/Black_King[front]-64x64 (2).png");
-        piecePaths.put(BoardTheme.MINECRAFT, mc);
+        piecePaths.put(BoardTheme.CLASSIC, mc);
+        piecePaths.put(BoardTheme.NETHER, new HashMap<>(mc));
+    }
+
+    static String boardPath(BoardTheme theme) {
+        return (theme == BoardTheme.STANDARD) ? STANDARD_BOARD : CLASSIC_BOARD;
+    }
+
+    static String backgroundPath(BoardTheme theme) {
+        return (theme == BoardTheme.NETHER) ? NETHER_BACKGROUND : DEFAULT_BACKGROUND;
     }
 
     /**
-     * Queues and synchronously loads all board and piece texture assets for the given theme.
+     * Queues and synchronously loads all board, piece, and background texture assets for the given map.
      */
     public void loadBoardAssets(BoardTheme theme) {
-        String boardPath = (theme == BoardTheme.MINECRAFT) ? "board/new chessboard.png" : "pieces/board.png";
-        load(boardPath, Texture.class);
-        load("board/new bg.png", Texture.class); // Load the new background
-        
+        load(boardPath(theme), Texture.class);
+        load(backgroundPath(theme), Texture.class);
+
         Map<String, String> paths = piecePaths.get(theme);
         for (String path : paths.values()) {
             load(path, Texture.class);
@@ -65,21 +77,21 @@ public class AssetManagerHelper extends AssetManager {
 
     /**
      * Retrieves the loaded chessboard texture.
-     *                
+     *
      * @return chessboard {@link Texture}
      */
     public Texture getBoardTexture(BoardTheme theme) {
-        String boardPath = (theme == BoardTheme.MINECRAFT) ? "board/new chessboard.png" : "pieces/board.png";
-        return get(boardPath, Texture.class);
+        return get(boardPath(theme), Texture.class);
     }
-    
-    public Texture getBackgroundTexture() {
-        return get("board/new bg.png", Texture.class);
+
+    /** Retrieves the arena background texture for the given map. */
+    public Texture getBackgroundTexture(BoardTheme theme) {
+        return get(backgroundPath(theme), Texture.class);
     }
 
     /**
      * Retrieves a loaded piece texture for the given theme, color, and piece name.
-     *                
+     *
      * @param theme board theme
      * @param color piece color ("white" or "black")
      * @param name  piece name ("pawn", "knight", "bishop", "rook", "queen", "king")

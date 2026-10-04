@@ -17,13 +17,13 @@ This file explains where each team should work and what to check before submitti
 - Keep shared game code in `core/src/main/java/io/github/ccs`.
 - Keep automated tests in `core/src/test/java/io/github/ccs/qa`.
 - Keep desktop-only startup settings in `lwjgl3`.
-- Put shipped game assets in `assets`.
+- Put shipped game assets in `core/assets` (the runtime asset root).
 
 ## Project Layout
 
 - `core`: The main game module. Most teams work here.
 - `lwjgl3`: Desktop launcher code for PC/Mac/Linux. This starts the game but should not contain normal gameplay code.
-- `assets`: Images, sounds, music, fonts, and other files loaded by the game at runtime.
+- `core/assets`: Images, sounds, music, fonts, and other files loaded by the game at runtime.
 - `gradle`, `gradlew`, `gradlew.bat`: Gradle wrapper files. Do not edit these unless the team agrees to upgrade Gradle.
 - `build` folders: Generated output. Do not edit these files manually.
 
@@ -172,7 +172,7 @@ Examples:
 
 Hidden nuances:
 
-- Audio files that ship with the game should go in `assets`.
+- Audio files that ship with the game should go in `core/assets`.
 - Code that decides when to play a sound can live in `sound`, but gameplay rules still belong in `game_logic`.
 - Avoid loading the same sound file repeatedly during gameplay.
 - Clean up audio resources when they are no longer needed.
@@ -185,7 +185,7 @@ Hidden nuances:
 - Save game feature: Backend team, `backend`, with help from game logic.
 - Computer opponent: AI / Networking team, `ai_networking`, with validation from game logic.
 - Multiplayer move sync: AI / Networking team, `ai_networking`, with QA edge-case tests.
-- Move sound effect: Sound design team, `sound`, with the audio file in `assets`.
+- Move sound effect: Sound design team, `sound`, with the audio file in `core/assets`.
 - Bug test for checkmate: QA team, `core/src/test/java/io/github/ccs/qa`.
 - Window title or app icon: `lwjgl3`.
 
