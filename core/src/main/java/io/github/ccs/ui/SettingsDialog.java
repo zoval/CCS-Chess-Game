@@ -67,6 +67,8 @@ public class SettingsDialog extends Group implements Disposable {
     private Runnable saveHandler;
     private float saveToastTimer;
     private boolean saveButtonVisible;
+    private TextButton quitButton;
+    private Runnable quitAction;
 
     public SettingsDialog(MainGame game) {
         this.game = game;
@@ -178,6 +180,13 @@ public class SettingsDialog extends Group implements Disposable {
         syncVisualAidsToggle();
         window.add(visualAidsToggle).colspan(2).width(windowW * 0.52f).height(windowH * 0.085f).row();
 
+        if (quitAction != null) {
+            quitButton = createToggle();
+            quitButton.setText("QUIT TO MENU");
+            window.add(quitButton).colspan(2).width(windowW * 0.52f).height(windowH * 0.085f)
+                .spaceTop(windowH * 0.025f).row();
+        }
+
         // Listeners attach after the initial syncs so the sync's setChecked() can't re-enter.
         // layout() rebuilds fresh actors each time, so these never accumulate.
         musicSlider.addListener(new ChangeListener() {
@@ -206,6 +215,20 @@ public class SettingsDialog extends Group implements Disposable {
                 syncVisualAidsToggle();
             }
         });
+        if (quitButton != null) {
+            quitButton.addListener(new ChangeListener() {
+                @Override
+                public void changed(ChangeEvent event, Actor actor) {
+                    // setChecked(false) below re-fires changed(); ignore that nested call.
+                    if (!quitButton.isChecked()) {
+                        return;
+                    }
+                    SoundManager.getInstance().playUIClick();
+                    quitButton.setChecked(false);
+                    quitAction.run();
+                }
+            });
+        }
 
         float closeW = windowW * 0.13f * 182f / 359f;
         float closeH = closeW * 183f / 182f;
@@ -346,6 +369,11 @@ public class SettingsDialog extends Group implements Disposable {
     /** Sets the callback run when SAVE GAME is clicked. */
     public void setSaveHandler(Runnable saveHandler) {
         this.saveHandler = saveHandler;
+    }
+
+    /** Sets the callback run when QUIT TO MENU is clicked; wiring it adds the button. */
+    public void setQuitAction(Runnable quitAction) {
+        this.quitAction = quitAction;
     }
 
     public boolean isOpen() {

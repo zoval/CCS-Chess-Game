@@ -66,6 +66,7 @@ public class ChessGameScreen extends ScreenAdapter {
 
         hudStage = new Stage(new ScreenViewport());
         settingsDialog = new SettingsDialog(game);
+        settingsDialog.setQuitAction(this::backToMenu);
         promotionDialog = new PromotionDialog();
         inputHandler = new BoardInputHandler(board, this);
         hud = new ChessHud(board, game, renderer, settingsDialog);
