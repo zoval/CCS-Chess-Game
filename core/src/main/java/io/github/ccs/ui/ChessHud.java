@@ -126,7 +126,7 @@ class ChessHud extends Group implements Disposable {
         resignButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (board.isGameOver()) {
+                if (board.isGameOver() || board.isViewingHistory()) {
                     return;
                 }
                 SoundManager.getInstance().playUIClick();
@@ -140,7 +140,7 @@ class ChessHud extends Group implements Disposable {
         drawButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (board.isGameOver()) {
+                if (board.isGameOver() || board.isViewingHistory()) {
                     return;
                 }
                 SoundManager.getInstance().playUIClick();
@@ -232,7 +232,7 @@ class ChessHud extends Group implements Disposable {
         navBack.setBounds(boardX / 2f - NAV_SIZE / 2f, centerY, NAV_SIZE, NAV_SIZE);
         navForward.setBounds(width - boardX / 2f - NAV_SIZE / 2f, centerY, NAV_SIZE, NAV_SIZE);
 
-        float sideX = width - boardX / 2f - SIDE_BUTTON_W;
+        float sideX = boardX + boardSize + (boardX - SIDE_BUTTON_W) / 2f;
         float resignY = height / 2f - 70f;
         resignButton.setBounds(sideX, resignY, SIDE_BUTTON_W, SIDE_BUTTON_H);
         resignLabel.setPosition(sideX + SIDE_BUTTON_W / 2f - resignLabel.getPrefWidth() / 2f,
