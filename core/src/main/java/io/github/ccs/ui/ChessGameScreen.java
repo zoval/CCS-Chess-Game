@@ -1,11 +1,21 @@
 package io.github.ccs.ui;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.ccs.MainGame;
 import io.github.ccs.game_logic.Board;
+import io.github.ccs.sound.SoundManager;
 
 /** Screen managing the chess game session and coordinating renderer and input components. */
 public class ChessGameScreen extends ScreenAdapter {
@@ -13,6 +23,10 @@ public class ChessGameScreen extends ScreenAdapter {
     private final PieceAnimation animation = new PieceAnimation();
     private final MainGame game;
     private BoardRenderer renderer;
+    private BoardInputHandler inputHandler;
+    private Stage hudStage;
+    private SettingsDialog settingsDialog;
+    private Texture gearTexture;
     private float boardX, boardY, boardSize;
 
     public ChessGameScreen(MainGame game) {
@@ -24,7 +38,39 @@ public class ChessGameScreen extends ScreenAdapter {
         renderer = new BoardRenderer(game.getSelectedTheme());
         renderer.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         calculateLayout();
-        Gdx.input.setInputProcessor(new BoardInputHandler(board, animation, this));
+        SoundManager.getInstance().initialize();
+        SoundManager.getInstance().playGameMusic();
+
+        hudStage = new Stage(new ScreenViewport());
+        settingsDialog = new SettingsDialog(game);
+        hudStage.addActor(settingsDialog);
+        inputHandler = new BoardInputHandler(board, animation, this);
+        buildSettingsButton();
+
+        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(hudStage);
+        multiplexer.addProcessor(inputHandler);
+        Gdx.input.setInputProcessor(multiplexer);
+    }
+
+    private void buildSettingsButton() {
+        gearTexture = ProceduralTextures.gearIcon(64);
+        ImageButton settingsButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(gearTexture)));
+        float buttonSize = 44f;
+        settingsButton.setSize(buttonSize, buttonSize);
+        settingsButton.setPosition(Gdx.graphics.getWidth() - buttonSize - 10f,
+            Gdx.graphics.getHeight() - buttonSize - 10f);
+        settingsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (settingsDialog.isOpen()) {
+                    settingsDialog.hide();
+                } else {
+                    settingsDialog.open();
+                }
+            }
+        });
+        hudStage.addActor(settingsButton);
     }
 
     private void calculateLayout() {
@@ -46,7 +92,15 @@ public class ChessGameScreen extends ScreenAdapter {
 
         animation.update(delta);
         if (renderer != null) {
-            renderer.render(board, animation, boardX, boardY, boardSize);
+            inputHandler.setInputBlocked(settingsDialog != null && settingsDialog.isOpen());
+            renderer.render(board, animation, boardX, boardY, boardSize,
+                game.isVisualAidsEnabled(),
+                inputHandler.getSelectedRow(), inputHandler.getSelectedColumn(),
+                inputHandler.getHoverRow(), inputHandler.getHoverColumn(), delta);
+        }
+        if (hudStage != null) {
+            hudStage.act(delta);
+            hudStage.draw();
         }
     }
 
@@ -81,14 +135,23 @@ public class ChessGameScreen extends ScreenAdapter {
     @Override
     public void hide() {
         Gdx.input.setInputProcessor(null);
+        SoundManager.getInstance().stopMusic();
     }
-// ...existing code...
-
 
     @Override
     public void dispose() {
+        SoundManager.getInstance().stopMusic();
         if (renderer != null) {
             renderer.dispose();
+        }
+        if (settingsDialog != null) {
+            settingsDialog.dispose();
+        }
+        if (gearTexture != null) {
+            gearTexture.dispose();
+        }
+        if (hudStage != null) {
+            hudStage.dispose();
         }
     }
 }

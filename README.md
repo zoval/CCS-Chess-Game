@@ -16,7 +16,7 @@ Most day-to-day game work should happen inside `core/src/main/java/io/github/ccs
 - `ui`: Screens, HUDs, menus, visual presentation, and input-facing UI code.
 - `game_logic`: Chess rules, board state, turn flow, move validation, and gameplay systems.
 - `backend`: Persistence, settings, save/load workflows, and local service-style support code.
-- `ai_networking`: Computer-player behavior, multiplayer/network sessions, matchmaking hooks, and request clients.
+- `ai_networking`: Computer-player behavior — Easy (random with capture bias), Medium (depth-2 minimax), and Hard (alpha-beta minimax) bots built on shared move generation and evaluation helpers. Multiplayer/network sessions are planned for this package but not implemented yet.
 - `sound`: Music, sound effects, audio triggers, mixer settings, and playback integration.
 - `core/src/test/java/io/github/ccs/qa`: Automated tests, fixtures, regression checks, and QA verification helpers.
 

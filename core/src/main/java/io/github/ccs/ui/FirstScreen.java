@@ -9,16 +9,14 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.ccs.MainGame;
+import io.github.ccs.sound.SoundManager;
 
 /** Main menu displaying the supplied menu artwork and navigation actions. */
 public class FirstScreen extends ScreenAdapter {
@@ -49,6 +47,8 @@ public class FirstScreen extends ScreenAdapter {
     private TextureRegion settingsRegion;
     private TextureRegion collectionRegion;
     private TextureRegion quitRegion;
+    private SettingsDialog settingsDialog;
+    private final java.util.List<IlluminatedButton> menuButtons = new java.util.ArrayList<>();
 
     public FirstScreen(MainGame game) {
         this.game = game;
@@ -57,9 +57,13 @@ public class FirstScreen extends ScreenAdapter {
     @Override
     public void show() {
         stage = new Stage(new ScreenViewport());
+        SoundManager.getInstance().initialize();
+        SoundManager.getInstance().playMenuMusic();
         loadTextures();
         buildMenu();
         installInputHandling();
+        settingsDialog = new SettingsDialog(game);
+        stage.addActor(settingsDialog);
         Gdx.input.setInputProcessor(stage);
     }
 
@@ -128,23 +132,11 @@ public class FirstScreen extends ScreenAdapter {
         menuPanel.setPosition(contentLeft + TITLE_WIDTH + TITLE_PANEL_GAP, panelY);
     }
 
-    private ImageButton createButton(TextureRegion region, Runnable action) {
+    private IlluminatedButton createButton(TextureRegion region, Runnable action) {
         float aspect = region.getRegionHeight() / (float) region.getRegionWidth();
-        ImageButton button = new ImageButton(new TextureRegionDrawable(region));
+        IlluminatedButton button = new IlluminatedButton(region, action);
         button.getImageCell().size(BUTTON_WIDTH, BUTTON_WIDTH * aspect);
-
-        if (action == null) {
-            button.setTouchable(Touchable.disabled);
-            return button;
-        }
-
-        button.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                action.run();
-            }
-        });
-
+        menuButtons.add(button);
         return button;
     }
 
@@ -152,21 +144,13 @@ public class FirstScreen extends ScreenAdapter {
         stage.addListener(new InputListener() {
             @Override
             public boolean keyDown(InputEvent event, int keycode) {
-                if (keycode == Input.Keys.F11) {
-                    toggleFullscreen();
+                if (keycode == Input.Keys.M) {
+                    SoundManager.getInstance().toggleSound();
                     return true;
                 }
                 return false;
             }
         });
-    }
-
-    private void toggleFullscreen() {
-        if (Gdx.graphics.isFullscreen()) {
-            Gdx.graphics.setWindowedMode(MainGame.MENU_WINDOW_WIDTH, MainGame.MENU_WINDOW_HEIGHT);
-        } else {
-            Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
-        }
     }
 
     @Override
@@ -197,6 +181,12 @@ public class FirstScreen extends ScreenAdapter {
     public void dispose() {
         if (stage != null) {
             stage.dispose();
+        }
+        if (settingsDialog != null) {
+            settingsDialog.dispose();
+        }
+        for (IlluminatedButton button : menuButtons) {
+            button.dispose();
         }
         disposeTexture(backgroundTexture);
         disposeTexture(panelTexture);

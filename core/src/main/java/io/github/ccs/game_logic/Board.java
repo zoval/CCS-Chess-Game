@@ -1,5 +1,8 @@
 package io.github.ccs.game_logic;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /** Coordinates board state, move validation, turns, and game status. */
 public final class Board {
     /** Piece type definitions mapped from {@link Piece}. */
@@ -84,6 +87,53 @@ public final class Board {
         fiftyMoveRule.reset();
         whiteTurn = true;
         gameStatus.reset();
+    }
+
+    /**
+     * Checks whether moving the piece at the source square to the destination square is legal
+     * for the side to move, without applying the move.
+     */
+    public boolean isLegalMove(int fromRow, int fromColumn, int toRow, int toColumn) {
+        return moveValidator.isLegalMove(position, fromRow, fromColumn, toRow, toColumn, whiteTurn);
+    }
+
+    /** @return all legal destination squares for the piece at the given square (empty if none). */
+    public List<int[]> getLegalMoves(int fromRow, int fromColumn) {
+        List<int[]> moves = new ArrayList<>();
+        if (position.getPiece(fromRow, fromColumn) == Piece.EMPTY) {
+            return moves;
+        }
+        for (int row = 0; row < 8; row++) {
+            for (int column = 0; column < 8; column++) {
+                if (isLegalMove(fromRow, fromColumn, row, column)) {
+                    moves.add(new int[]{row, column});
+                }
+            }
+        }
+        return moves;
+    }
+
+    /** @return true if the king of the given color is currently attacked. */
+    public boolean isKingInCheck(boolean white) {
+        return moveValidator.isKingAttacked(position, white);
+    }
+
+    /** @return true if the side to move's king is currently attacked. */
+    public boolean isCurrentKingInCheck() {
+        return moveValidator.isKingAttacked(position, whiteTurn);
+    }
+
+    /** @return the {@code [row, column]} of the given color's king, or null if not found. */
+    public int[] getKingPosition(boolean white) {
+        int king = Piece.forColor(Piece.KING, white);
+        for (int row = 0; row < 8; row++) {
+            for (int column = 0; column < 8; column++) {
+                if (position.getPiece(row, column) == king) {
+                    return new int[]{row, column};
+                }
+            }
+        }
+        return null;
     }
 
     private void promotePawn(int row, int column, int piece) {
