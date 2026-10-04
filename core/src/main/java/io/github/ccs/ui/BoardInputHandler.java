@@ -50,6 +50,11 @@ public class BoardInputHandler extends InputAdapter {
      */
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
+        if (inputBlocked) {
+            hoverRow = -1;
+            hoverColumn = -1;
+            return false;
+        }
         int[] square = screenToSquare(screenX, screenY);
         hoverRow = square[0];
         hoverColumn = square[1];

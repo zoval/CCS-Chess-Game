@@ -295,7 +295,9 @@ public class SettingsDialog extends Group implements Disposable {
         Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
         pixmap.setColor(checked ? 0.42f : 0.26f, checked ? 0.32f : 0.18f, 0.12f, 0.95f);
         drawRoundedStrip(pixmap, 0, 0, width, height, radius);
-        return new Texture(pixmap);
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
     }
 
     /** Brown pill matching the slider art's track (setting5), instead of a white bar. */
@@ -307,7 +309,9 @@ public class SettingsDialog extends Group implements Disposable {
         drawRoundedStrip(pixmap, 0, 0, width, height, height / 2);
         pixmap.setColor(50 / 255f, 35 / 255f, 30 / 255f, 1f);
         drawRoundedStrip(pixmap, 1, 1, width - 2, height - 2, (height - 2) / 2);
-        return new Texture(pixmap);
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
     }
 
     private void drawRoundedStrip(Pixmap pixmap, int x0, int y0, int width, int height, int radius) {

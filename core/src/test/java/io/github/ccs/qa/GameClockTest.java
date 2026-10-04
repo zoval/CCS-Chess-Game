@@ -51,6 +51,17 @@ public class GameClockTest {
     }
 
     @Test
+    public void updateRoundsSubMillisecondFrames() {
+        GameClock clock = new GameClock(1000);
+
+        clock.update(1f / 60f, true);
+
+        if (clock.getWhiteMillis() != 983) {
+            throw new AssertionError("A 60fps frame should deduct ~17ms, got: " + clock.getWhiteMillis());
+        }
+    }
+
+    @Test
     public void formatsMinutesAndSeconds() {
         if (!GameClock.format(600000).equals("10:00")) {
             throw new AssertionError("600000ms should format as 10:00");

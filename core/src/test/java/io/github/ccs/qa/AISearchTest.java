@@ -147,6 +147,19 @@ public class AISearchTest {
         }
     }
 
+    @Test
+    public void mediumAiPlaysMateInOne() {
+        Board board = new Board();
+        playFoolsMatePrelude(board);
+
+        Move move = new MediumAI().computeMove(board);
+
+        if (move == null || move.fromRow != 7 || move.fromColumn != 3
+                || move.toRow != 3 || move.toColumn != 7) {
+            throw new AssertionError("Expected MediumAI to find Qd8-h4 mate in one, got: " + move);
+        }
+    }
+
     private void playFoolsMatePrelude(Board board) {
         if (!board.move(1, 5, 2, 5)) throw new AssertionError("f2-f3 rejected"); // 1. f3
         if (!board.move(6, 4, 4, 4)) throw new AssertionError("e7-e5 rejected"); // 1... e5

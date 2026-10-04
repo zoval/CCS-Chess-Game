@@ -54,7 +54,7 @@ public final class MediumAI implements ChessAI {
         ScoredMove best = Collections.max(scored, SCORE_ORDER);
 
         // Found a mate: stop pretending to be weak.
-        if (best.score >= 900) {
+        if (best.score >= MATE - 1000) {
             return best.move;
         }
 

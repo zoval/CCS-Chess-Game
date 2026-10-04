@@ -25,7 +25,7 @@ public class GameClock {
      * per frame; the inactive side is untouched.
      */
     public void update(float delta, boolean whiteActive) {
-        long elapsed = (long) (delta * 1000f);
+        long elapsed = Math.round(delta * 1000f);
         if (whiteActive) {
             whiteMillis = Math.max(0, whiteMillis - elapsed);
         } else {
