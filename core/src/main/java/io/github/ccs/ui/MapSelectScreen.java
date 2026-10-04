@@ -268,16 +268,16 @@ public class MapSelectScreen extends ScreenAdapter {
         standardTabLabel.setPosition(
             offsetX + (436 + (150 - standardTabLabel.getPrefWidth() / scale) / 2f) * scale,
             offsetY + (412 + (42 - standardTabLabel.getPrefHeight() / scale) / 2f) * scale);
-        place(frameImage, scale, offsetX, offsetY, 277, 130, 470, 249);
-        place(previewImage, scale, offsetX, offsetY, 317, 150, 390, 209);
-        place(titleImage, scale, offsetX, offsetY, 369, 84, 286, 30);
+        place(frameImage, scale, offsetX, offsetY, 277, 155, 470, 249);
+        place(previewImage, scale, offsetX, offsetY, 317, 175, 390, 209);
+        place(titleImage, scale, offsetX, offsetY, 369, 121, 286, 30);
         titleLabel.setFontScale(scale);
         titleLabel.setPosition(offsetX + (DESIGN_W * scale - titleLabel.getPrefWidth()) / 2f,
-            offsetY + 84 * scale + 4 * scale);
+            offsetY + 121 * scale + 4 * scale);
         infoLabel.setFontScale(scale);
         infoLabel.setSize(704 * scale, 60 * scale);
-        infoLabel.setPosition(offsetX + 160 * scale, offsetY + 26 * scale);
-        place(selectButton, scale, offsetX, offsetY, 387, 40, 250, 68);
+        infoLabel.setPosition(offsetX + 160 * scale, offsetY + 22 * scale);
+        place(selectButton, scale, offsetX, offsetY, 422, 68, 180, 49);
         place(closeButton, scale, offsetX, offsetY, 816, 496, 36, 35);
     }
 
