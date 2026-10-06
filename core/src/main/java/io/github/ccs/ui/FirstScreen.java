@@ -28,6 +28,9 @@ public class FirstScreen extends ScreenAdapter {
     private static final float TITLE_WIDTH = 500f;
     private static final float TITLE_PANEL_GAP = 40f;
     private static final float TITLE_PANEL_TOP_OVERLAP = 20f;
+    private static final float VERTICAL_TITLE_PANEL_GAP = 16f;
+    private static final float LAYOUT_MARGIN = 12f;
+    private static final float VERTICAL_LAYOUT_MAX_WIDTH = 800f;
 
     private final MainGame game;
     private Stage stage;
@@ -121,14 +124,37 @@ public class FirstScreen extends ScreenAdapter {
     }
 
     private void layoutMenu(float width, float height) {
-        float contentWidth = TITLE_WIDTH + TITLE_PANEL_GAP + PANEL_WIDTH;
-        float contentLeft = (width - contentWidth) / 2f;
-        float panelY = (height - PANEL_HEIGHT) / 2f;
-
         backgroundImage.setBounds(0f, 0f, width, height);
+        boolean verticalLayout = width < VERTICAL_LAYOUT_MAX_WIDTH;
+        float availableWidth = Math.max(1f, width - 2f * LAYOUT_MARGIN);
+        float availableHeight = Math.max(1f, height - 2f * LAYOUT_MARGIN);
+
+        if (verticalLayout) {
+            float contentWidth = Math.max(TITLE_WIDTH, PANEL_WIDTH);
+            float contentHeight = PANEL_HEIGHT + VERTICAL_TITLE_PANEL_GAP + titleImage.getHeight();
+            float scale = Math.min(1f, Math.min(availableWidth / contentWidth, availableHeight / contentHeight));
+            float panelX = (width - PANEL_WIDTH * scale) / 2f;
+            float panelY = (height - contentHeight * scale) / 2f;
+
+            titleImage.setScale(scale);
+            menuPanel.setScale(scale);
+            titleImage.setPosition((width - TITLE_WIDTH * scale) / 2f,
+                panelY + (PANEL_HEIGHT + VERTICAL_TITLE_PANEL_GAP) * scale);
+            menuPanel.setPosition(panelX, panelY);
+            return;
+        }
+
+        float contentWidth = TITLE_WIDTH + TITLE_PANEL_GAP + PANEL_WIDTH;
+        float contentHeight = PANEL_HEIGHT + TITLE_PANEL_TOP_OVERLAP;
+        float scale = Math.min(1f, Math.min(availableWidth / contentWidth, availableHeight / contentHeight));
+        float contentLeft = (width - contentWidth * scale) / 2f;
+        float panelY = (height - PANEL_HEIGHT * scale) / 2f;
+
+        titleImage.setScale(scale);
+        menuPanel.setScale(scale);
         titleImage.setPosition(contentLeft,
-            panelY + PANEL_HEIGHT - titleImage.getHeight() + TITLE_PANEL_TOP_OVERLAP);
-        menuPanel.setPosition(contentLeft + TITLE_WIDTH + TITLE_PANEL_GAP, panelY);
+            panelY + (PANEL_HEIGHT - titleImage.getHeight() + TITLE_PANEL_TOP_OVERLAP) * scale);
+        menuPanel.setPosition(contentLeft + (TITLE_WIDTH + TITLE_PANEL_GAP) * scale, panelY);
     }
 
     private IlluminatedButton createButton(TextureRegion region, Runnable action) {
