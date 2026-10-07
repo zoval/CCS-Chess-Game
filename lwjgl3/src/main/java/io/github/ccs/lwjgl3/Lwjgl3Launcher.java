@@ -35,7 +35,7 @@ public class Lwjgl3Launcher {
         //// You may also need to configure GPU drivers to fully disable Vsync; this can
         //// cause screen tearing.
 
-        configuration.setResizable(false);
+        configuration.setResizable(true);
         //// Matches the 1024x572 menu background (menu/BG.jpg).
         configuration.setWindowedMode(MainGame.MENU_WINDOW_WIDTH, MainGame.MENU_WINDOW_HEIGHT);
         configuration.setWindowSizeLimits(400, 300, -1, -1);

@@ -1,6 +1,8 @@
 package io.github.ccs;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 
 import io.github.ccs.ai_networking.Difficulty;
@@ -28,6 +30,8 @@ public class MainGame extends Game {
     private GameMode gameMode = GameMode.P_V_P;
     private Difficulty difficulty = Difficulty.MEDIUM;
     private int timeControlMinutes = 10;
+    private int windowedWidth = MENU_WINDOW_WIDTH;
+    private int windowedHeight = MENU_WINDOW_HEIGHT;
     private BoardTheme selectedMap = BoardTheme.CLASSIC;
     private GameState pendingLoad;
     private boolean visualAidsEnabled = true;
@@ -35,6 +39,35 @@ public class MainGame extends Game {
     @Override
     public void create() {
         setScreen(new FirstScreen(this));
+    }
+
+    @Override
+    public void render() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F11)) {
+            toggleFullscreen();
+        }
+        super.render();
+    }
+
+    private void toggleFullscreen() {
+        if (Gdx.graphics.isFullscreen()) {
+            Gdx.graphics.setWindowedMode(windowedWidth, windowedHeight);
+            return;
+        }
+
+        enterFullscreen();
+    }
+
+    public void enterFullscreen() {
+        if (Gdx.graphics.isFullscreen()) {
+            return;
+        }
+
+        windowedWidth = Gdx.graphics.getWidth();
+        windowedHeight = Gdx.graphics.getHeight();
+        if (!Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode())) {
+            Gdx.app.error("MainGame", "Unable to enter fullscreen mode.");
+        }
     }
 
     /**

@@ -9,6 +9,9 @@ This project was generated with a template including simple application launcher
 - `core`: Main module with the application logic shared by all platforms.
 - `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
 
+On desktop, press **F11** to toggle fullscreen. The game remembers the windowed size when
+leaving fullscreen; the window can also be resized or maximized normally.
+
 ## Team Folders
 
 Most day-to-day game work should happen inside `core/src/main/java/io/github/ccs`.

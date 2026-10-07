@@ -473,9 +473,7 @@ public class OpponentSelectScreen extends ScreenAdapter {
         }
         game.setTimeControlMinutes(chosenMinutes);
         GameState pending = game.consumePendingLoad();
-        if (!Gdx.graphics.isFullscreen()) {
-            Gdx.graphics.setWindowedMode(MainGame.GAME_WINDOW_WIDTH, MainGame.GAME_WINDOW_HEIGHT);
-        }
+        game.enterFullscreen();
         game.setScreen(pending != null ? new ChessGameScreen(game, pending) : new ChessGameScreen(game));
     }
 
@@ -486,9 +484,7 @@ public class OpponentSelectScreen extends ScreenAdapter {
             return;
         }
         SoundManager.getInstance().playUIClick();
-        if (!Gdx.graphics.isFullscreen()) {
-            Gdx.graphics.setWindowedMode(MainGame.GAME_WINDOW_WIDTH, MainGame.GAME_WINDOW_HEIGHT);
-        }
+        game.enterFullscreen();
         game.setScreen(new ChessGameScreen(game, state));
     }
 
